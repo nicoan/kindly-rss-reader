@@ -1,0 +1,17 @@
+[package]
+name = "kindle-rss-reader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.7.5"
+axum_static = "1.7.1"
+minijinja = { version = "2.0.2", features = ["loader"] }
+reqwest = "0.12.5"
+rss = "2.0.8"
+serde = "1.0.203"
+tokio = { version = "1.38.0", features = ["fs", "io-util", "rt-multi-thread"] }
+tower = "0.4.13"
+tower-http = { version = "0.5.2", features = ["fs"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

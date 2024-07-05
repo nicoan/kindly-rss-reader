@@ -1,0 +1,16 @@
+body {
+    background-color: light-grey;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+    color: black;
+}
+
+.button {
+    color: black;
+}
+
+a {
+    color: darkgray;
+    text-decoration: none;
+}
