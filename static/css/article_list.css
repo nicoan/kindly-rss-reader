@@ -1,0 +1,19 @@
+h1, h2, h3, h4, h5, h6, p {
+    margin: 5px;
+}
+
+p {
+    text-align: justify;
+}
+
+sub {
+    font-family: Calibri, Helvetica, Sans-Serif;
+    margin: 0;
+}
+
+.article-list {
+    overflow: auto;
+    padding: 8px;
+}
+
+.article::-webkit-scrollbar { width: 0 !important }

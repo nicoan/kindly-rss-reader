@@ -1,8 +1,11 @@
+use crate::repositories::init_database;
 use crate::tracing::init_tracing;
 use ::tracing::info;
 use state::State;
 
 mod controllers;
+mod models;
+mod repositories;
 mod router;
 pub mod services;
 mod state;
@@ -13,8 +16,11 @@ async fn main() {
     // Init tracing
     init_tracing();
 
+    // Init database
+    let connection = init_database();
+
     // Create state
-    let state = State::new();
+    let state = State::new(connection);
 
     // Initialize App
     let app = router::build(state);

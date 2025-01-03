@@ -1,15 +1,25 @@
 <html>
     <head>
-        <link rel="stylesheet" href="/static/css/font-awesome.min.css">
-        <link rel="stylesheet" href="/static/css/article.css">
-        <link rel="stylesheet" href="/static/css/article_dark_theme.css" class="alternate" disabled="true">
-        <link rel="stylesheet" href="/static/css/article_light_theme.css" class="alternate">
-        <script type="text/javascript" src="/static/js/article_controls.js"></script>
+        {% include "common_head" %}
+        <link rel="stylesheet" href="/static/css/article_list.css">
     </head>
     <body>
-        <main class="main">
-            <div id="article" class="article">
-                {{ article }}
+        <main>
+            <div>
+                <h1> {{ feed.title }} </h1>
+                <hr/>
+                <div id="article" class="article-list">
+                    {% for item in articles %}
+                    <a href="/feed/{{feed.id}}/article/{{item.id}}">
+                        <h2> {{ item.title }} </h2>
+                        <div style="display: flex; justify-content: space-between; padding: 0 5px;">
+                            <sub> {{ item.author }} </sub>
+                            <sub> {{ item.last_updated }} </sub>
+                        </div>
+                        <hr/>
+                    </a>
+                    {% endfor %}
+                </div>
             </div>
             {% include "toolbar" %}
         </main>

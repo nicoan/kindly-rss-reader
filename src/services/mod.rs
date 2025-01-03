@@ -1,3 +1,4 @@
+pub mod feed;
 pub mod rss;
 pub mod templates;
 
