@@ -8,6 +8,7 @@ axum = "0.7.5"
 axum_static = "1.7.1"
 chrono = { version = "0.4.39", features = ["serde"] }
 minijinja = { version = "2.0.2", features = ["loader"] }
+regex = "1.11.1"
 reqwest = "0.12.5"
 rss = "2.0.8"
 serde = { version = "1.0.203", features = ["derive"] }

@@ -1,3 +1,4 @@
+use crate::providers::html_processor::HtmlProcessorImpl;
 use std::sync::Arc;
 
 use sqlite::ConnectionThreadSafe;
@@ -19,7 +20,7 @@ use crate::{
 #[derive(Clone)]
 pub struct State {
     pub template_service: TemplateServiceImpl<'static>,
-    pub rss_service: RssServiceImpl<FeedRepositoryImpl>,
+    pub rss_service: RssServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>,
     pub feed_service: FeedServiceImpl<FeedRepositoryImpl>,
 }
 
@@ -55,7 +56,7 @@ impl State {
 
         Self {
             template_service,
-            rss_service: RssServiceImpl::new(feed_repository.clone()),
+            rss_service: RssServiceImpl::new(feed_repository.clone(), HtmlProcessorImpl),
             feed_service: FeedServiceImpl::new(feed_repository),
         }
     }
@@ -63,7 +64,7 @@ impl State {
 
 impl AppState for State {
     type TS = TemplateServiceImpl<'static>;
-    type RS = RssServiceImpl<FeedRepositoryImpl>;
+    type RS = RssServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>;
     type FS = FeedServiceImpl<FeedRepositoryImpl>;
 
     fn template_service(&self) -> &Self::TS {

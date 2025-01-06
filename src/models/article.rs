@@ -8,8 +8,8 @@ pub struct Article {
     pub feed_id: Uuid,
     pub title: String,
     pub author: String,
-    pub description: String,
     pub guid: String,
+    pub link: String,
     // Rename this to content, in databases like postgre we can save it directly in a column, in
     // SQLite we rely on the fs
     pub path: Option<String>,

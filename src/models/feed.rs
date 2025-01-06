@@ -6,6 +6,7 @@ pub struct Feed {
     pub id: String,
     pub title: String,
     pub url: String,
+    pub link: String,
     pub favicon_url: Option<String>,
     pub last_updated: DateTime<Utc>,
 }

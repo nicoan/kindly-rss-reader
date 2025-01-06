@@ -32,6 +32,7 @@ impl FeedRepository for FeedRepositoryImpl {
                     id: row.read::<&str, _>("id").into(),
                     title: row.read::<&str, _>("title").into(),
                     url: row.read::<&str, _>("url").into(),
+                    link: row.read::<&str, _>("link").into(),
                     favicon_url: row
                         .read::<Option<&str>, _>("favicon_path")
                         .map(|s| s.to_owned()),
@@ -55,6 +56,7 @@ impl FeedRepository for FeedRepositoryImpl {
                     id: row.read::<&str, _>("id").into(),
                     title: row.read::<&str, _>("title").into(),
                     url: row.read::<&str, _>("url").into(),
+                    link: row.read::<&str, _>("link").into(),
                     favicon_url: row
                         .read::<Option<&str>, _>("favicon_path")
                         .map(|s| s.to_owned()),
@@ -72,13 +74,12 @@ impl FeedRepository for FeedRepositoryImpl {
             .unwrap()
             .map(|row| {
                 let row = row.unwrap();
-                println!("{}", row.read::<&str, _>("last_updated"));
                 Article {
                     id: Uuid::from_str(row.read::<&str, _>("id")).unwrap(),
                     feed_id: Uuid::from_str(row.read::<&str, _>("feed_id")).unwrap(),
                     title: row.read::<&str, _>("title").into(),
                     author: row.read::<&str, _>("author").into(),
-                    description: row.read::<&str, _>("description").into(),
+                    link: row.read::<&str, _>("link").into(),
                     guid: row.read::<&str, _>("guid").into(),
                     path: row.read::<Option<&str>, _>("path").map(|s| s.to_owned()),
                     read: row.read::<i64, _>("read") != 0,
@@ -105,8 +106,8 @@ impl FeedRepository for FeedRepositoryImpl {
                     feed_id: Uuid::from_str(row.read::<&str, _>("feed_id")).unwrap(),
                     title: row.read::<&str, _>("title").into(),
                     author: row.read::<&str, _>("author").into(),
-                    description: row.read::<&str, _>("description").into(),
                     guid: row.read::<&str, _>("guid").into(),
+                    link: row.read::<&str, _>("link").into(),
                     path: row.read::<Option<&str>, _>("path").map(|s| s.to_owned()),
                     read: row.read::<i64, _>("read") != 0,
                     last_updated: DateTime::from_str(row.read::<&str, _>("last_updated")).unwrap(),
@@ -124,10 +125,10 @@ impl FeedRepository for FeedRepositoryImpl {
                     "('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', 0)",
                     Uuid::new_v4(),
                     feed_id,
-                    article.title,
-                    article.author,
-                    article.description,
+                    article.title.replace("'", "''"),
+                    article.author.replace("'", "''"),
                     article.guid,
+                    article.link,
                     &now,
                     article.path.as_deref().unwrap_or("NULL"),
                 )
@@ -137,7 +138,7 @@ impl FeedRepository for FeedRepositoryImpl {
 
         let query = format!(
             r#"
-            INSERT INTO article (id, feed_id, title, author, description, guid, last_updated, path, read)
+            INSERT INTO article (id, feed_id, title, author, guid, link, last_updated, path, read)
             VALUES {values}
             ON CONFLICT(guid) DO NOTHING;
 
@@ -169,5 +170,14 @@ impl FeedRepository for FeedRepositoryImpl {
         } else {
             None
         }
+    }
+
+    async fn update_last_updated(&self, feed_id: Uuid, date: DateTime<Utc>) {
+        self.connection
+            .execute(format!(
+                "UPDATE feed SET last_updated = '{}' WHERE id = '{feed_id}'",
+                date.to_rfc3339()
+            ))
+            .unwrap();
     }
 }

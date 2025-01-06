@@ -5,6 +5,7 @@ use state::State;
 
 mod controllers;
 mod models;
+pub mod providers;
 mod repositories;
 mod router;
 pub mod services;
