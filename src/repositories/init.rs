@@ -19,6 +19,7 @@ pub fn init_database() -> ConnectionThreadSafe {
             .unwrap_or_else(|_| panic!("unable to run migration: {migration:?}"));
     }
 
+    /*
     connection
                 .execute(
                     r#"
@@ -41,5 +42,6 @@ pub fn init_database() -> ConnectionThreadSafe {
             "#,
                 )
                 .unwrap();
+    */
     connection
 }

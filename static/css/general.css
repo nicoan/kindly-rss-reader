@@ -51,6 +51,16 @@ button:focus {
     outline: none;
 }
 
+.section-header {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px lightgrey solid;
+}
+
+.section-header-buttons {
+    margin-left: auto;
+}
+
 #middle-space-toolbar {
     height: 100%;
 }

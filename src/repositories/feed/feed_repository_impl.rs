@@ -65,6 +65,21 @@ impl FeedRepository for FeedRepositoryImpl {
             })
     }
 
+    async fn add_feed(&self, feed: Feed) {
+        let query = format!(
+            r#"
+                    INSERT INTO feed (id, title, url, link, last_updated)
+                    VALUES ('{}', '{}', '{}', '{}', '1970-01-01T00:00:00Z');
+                "#,
+            feed.id,
+            feed.title.replace("'", "''"),
+            feed.url,
+            feed.link,
+        );
+        println!("{query}");
+        self.connection.execute(query).unwrap();
+    }
+
     async fn get_feed_articles(&self, feed_id: Uuid) -> Vec<Article> {
         self.connection
             .prepare("SELECT * FROM article WHERE feed_id = ?")

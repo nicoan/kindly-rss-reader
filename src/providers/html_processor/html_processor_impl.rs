@@ -11,11 +11,40 @@ use super::HtmlProcessor;
 #[derive(Clone)]
 pub struct HtmlProcessorImpl;
 
-impl HtmlProcessorImpl {}
+impl HtmlProcessorImpl {
+    fn extract_content_between_tag(html: &str, tag: &str) -> Option<String> {
+        // let start_tag = "<main";
+        let start_tag = Regex::new(&format!(r"(?i)<\s*{tag}[^>]*>")).unwrap();
+        let end_tag = &format!("</{tag}>");
+
+        let start_tag = start_tag.find(html)?;
+
+        // Locate the start and end positions of the <article> content
+        if let Some(end_idx) = html.find(end_tag) {
+            // Extract the content between the <main> tags
+            let start = start_tag.end();
+            let article_content = &html[start..end_idx];
+            return Some(article_content.to_string());
+        }
+        None
+    }
+}
 
 #[async_trait]
 impl HtmlProcessor for HtmlProcessorImpl {
     fn process_html_article(html: &str) -> Result<String, Box<dyn std::error::Error>> {
+        let content = Self::extract_content_between_tag(html, "main");
+        if let Some(content) = content {
+            return Ok(content);
+        }
+
+        let content = Self::extract_content_between_tag(html, "article");
+        if let Some(content) = content {
+            return Ok(content);
+        }
+
+        Err("unable to parse document".into())
+        /*
         // let start_tag = "<main";
         let start_tag = Regex::new(r"(?i)<\s*main[^>]*>").unwrap();
         let end_tag = "</main>";
@@ -30,6 +59,7 @@ impl HtmlProcessor for HtmlProcessorImpl {
             return Ok(article_content.to_string());
         }
         Ok("".to_owned())
+        */
     }
 
     // TODO: We need to make this flexible in case we don't want to save the images to the fs

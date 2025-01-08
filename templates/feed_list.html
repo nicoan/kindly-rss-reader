@@ -7,8 +7,18 @@
     <body>
         <main class="main">
             <div class="content">
-                <h1> Feed list </h1>
-                <hr/>
+                <div class="section-header">
+                    <h1> Feed list </h1>
+                    <div class="section-header-buttons">
+                        <a href="/feed/add">
+                            <i
+                                id="scrollUpButton"
+                                class="fa fa-plus button"
+                                aria-hidden="true">
+                            </i>
+                        </a>
+                    </div>
+                </div>
                 <div id="article" class="article-list">
                     {% for feed in feeds %}
                     <a href="feed/{{ feed.id }}">

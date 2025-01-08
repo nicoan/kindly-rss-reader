@@ -1,0 +1,23 @@
+<html>
+    <head>
+        {% include "common_head" %}
+    </head>
+    <body>
+        <main class="main">
+            <div class="content">
+                <div class="section-header">
+                    <h1> Add new feed </h1>
+                </div>
+
+                <div class="content">
+                    <form action="/feed/add" method="POST">
+                       <label for="url-input">Enter URL:</label><br/>
+                       <input type="url" id="url-input" name="url" placeholder="https://example.com/rss.xml" required>
+                       <button type="submit">Create</button>
+                    </form>
+                </div>
+            </div>
+            {% include "toolbar" %}
+        </main>
+    </body>
+</html>
