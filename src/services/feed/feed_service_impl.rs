@@ -91,7 +91,6 @@ where
         Ok(())
     }
 
-    // TODO: Compare GUID and last_updated of entries to not re-download not updated entries
     async fn get_channel(&self, feed_id: Uuid) -> Result<(Feed, Vec<Article>)> {
         let feed = self.feed_repository.get_feed(feed_id).await?;
         if let Some(feed) = feed {
@@ -102,7 +101,7 @@ where
                     .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
 
                 // First we check with the channel and the database if any of the articles is new
-                let saved_articles = self.feed_repository.get_feed_articles(feed_id).await;
+                let saved_articles = self.feed_repository.get_feed_articles(feed_id).await?;
 
                 let articles_guid: HashSet<&str> = saved_articles
                     .iter()
@@ -114,10 +113,12 @@ where
                     .into_iter()
                     .filter(|item| {
                         if let Some(guid) = &item.guid().map(|g| g.value()) {
+                            tracing::info!("{guid}");
                             !articles_guid.contains(guid)
                         // We filter by link because if guid is not found, we identify the article
                         // by its link
                         } else if let Some(link) = &item.link() {
+                            tracing::info!("{link}");
                             !articles_guid.contains(link)
                         } else {
                             tracing::warn!(
@@ -133,7 +134,7 @@ where
                 if channel_items.is_empty() {
                     self.feed_repository
                         .update_last_updated(feed_id, Utc::now())
-                        .await;
+                        .await?;
                     return Ok((feed, saved_articles));
                 }
 
@@ -141,6 +142,7 @@ where
                 let feed_link = Arc::new(feed.link.clone());
                 let file_path = format!("articles/{feed_id}");
                 let image_processor = Arc::new(ImageProcessorFsImpl::new(file_path));
+
                 // Create the articles from the channel items
                 for article in channel_items {
                     let feed_link = feed_link.clone();
@@ -240,11 +242,11 @@ where
                     }
                 }
 
-                self.feed_repository.add_articles(feed_id, articles).await;
+                self.feed_repository.add_articles(feed_id, articles).await?;
             }
 
             // TODO: Just prepend the new articles to saved_articles
-            let articles = self.feed_repository.get_feed_articles(feed_id).await;
+            let articles = self.feed_repository.get_feed_articles(feed_id).await?;
 
             Ok((feed, articles))
         } else {
@@ -253,9 +255,17 @@ where
     }
 
     async fn get_item_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<String> {
-        self.feed_repository
+        let content = self
+            .feed_repository
             .get_article_content(feed_id, article_id)
-            .await
-            .ok_or(FeedServiceError::ArticleNotFound(article_id, feed_id))
+            .await?;
+
+        if let Some(content) = content {
+            Ok(content)
+        } else {
+            Err(FeedServiceError::ArticleContentNotFound(
+                article_id, feed_id,
+            ))
+        }
     }
 }

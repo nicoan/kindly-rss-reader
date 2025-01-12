@@ -6,3 +6,9 @@ pub enum RepositoryError {
     #[error("unexpected error: {0:?}")]
     Unexpcted(#[from] anyhow::Error),
 }
+
+impl From<sqlite::Error> for RepositoryError {
+    fn from(value: sqlite::Error) -> Self {
+        RepositoryError::Unexpcted(value.into())
+    }
+}

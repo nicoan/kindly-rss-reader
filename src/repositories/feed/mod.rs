@@ -17,15 +17,19 @@ pub trait FeedRepository: Sync + Send {
 
     async fn get_feed(&self, feed_id: Uuid) -> Result<Option<Feed>>;
 
-    async fn get_feed_articles(&self, feed_id: Uuid) -> Vec<Article>;
+    async fn get_feed_articles(&self, feed_id: Uuid) -> Result<Vec<Article>>;
 
     async fn get_feed_list(&self) -> Result<Vec<Feed>>;
 
-    async fn add_articles(&self, feed_id: Uuid, articles: Vec<Article>);
+    async fn add_articles(&self, feed_id: Uuid, articles: Vec<Article>) -> Result<()>;
 
-    async fn get_article_content(&self, feed_id: Uuid, article_id: Uuid) -> Option<String>;
+    async fn get_article_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<Option<String>>;
 
-    async fn get_article_description(&self, feed_id: Uuid, article_id: Uuid) -> Option<Article>;
+    async fn get_article_description(
+        &self,
+        feed_id: Uuid,
+        article_id: Uuid,
+    ) -> Result<Option<Article>>;
 
-    async fn update_last_updated(&self, feed_id: Uuid, date: DateTime<Utc>);
+    async fn update_last_updated(&self, feed_id: Uuid, date: DateTime<Utc>) -> Result<()>;
 }
