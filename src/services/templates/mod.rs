@@ -1,10 +1,14 @@
+mod error;
 mod template_service_impl;
 
 use axum::async_trait;
+use error::TemplateServiceError;
 use serde::Serialize;
 use std::path::Path;
 
 pub use template_service_impl::TemplateServiceImpl;
+
+pub(crate) type Result<T> = std::result::Result<T, TemplateServiceError>;
 
 pub const TEMPLATE_NAME_ARTICLE: &str = "article";
 pub const TEMPLATE_NAME_ARTICLE_LIST: &str = "article_list";
@@ -21,7 +25,7 @@ pub const TEMPLATE_PATH_TOOLBAR: &str = "./templates/toolbar.html";
 
 #[async_trait]
 pub(crate) trait TemplateService<'a>: Sync + Send {
-    fn register_template(&mut self, name: &'a str, path: impl AsRef<Path>);
+    fn register_template(&mut self, name: &'a str, path: impl AsRef<Path>) -> Result<()>;
 
-    fn render_template(&self, name: &str, context: impl Serialize) -> String;
+    fn render_template(&self, name: &str, context: impl Serialize) -> Result<String>;
 }

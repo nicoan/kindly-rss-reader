@@ -7,15 +7,19 @@ use chrono::{DateTime, Utc};
 pub use feed_repository_impl::FeedRepositoryImpl;
 use uuid::Uuid;
 
+use super::RepositoryError;
+
+pub type Result<T> = std::result::Result<T, RepositoryError>;
+
 #[async_trait]
 pub trait FeedRepository: Sync + Send {
-    async fn add_feed(&self, url: Feed);
+    async fn add_feed(&self, url: Feed) -> Result<()>;
 
-    async fn get_feed(&self, feed_id: Uuid) -> Option<Feed>;
+    async fn get_feed(&self, feed_id: Uuid) -> Result<Option<Feed>>;
 
     async fn get_feed_articles(&self, feed_id: Uuid) -> Vec<Article>;
 
-    async fn get_feed_list(&self) -> Vec<Feed>;
+    async fn get_feed_list(&self) -> Result<Vec<Feed>>;
 
     async fn add_articles(&self, feed_id: Uuid, articles: Vec<Article>);
 

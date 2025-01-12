@@ -1,83 +1,91 @@
-//! TODO: Implement a proper parser!!! ATM we are not sanitizing anything
-use std::path::Path;
+//! TODO: Implement a proper parser!!!
+use crate::providers::image_processor::ImageProcessor;
 
+use super::{error::HtmlProcessorError, Result};
 use axum::async_trait;
 use regex::Regex;
-use tokio::{fs, io::AsyncWriteExt};
-use uuid::Uuid;
 
 use super::HtmlProcessor;
 
 #[derive(Clone)]
-pub struct HtmlProcessorImpl;
+pub struct HtmlProcessorImpl {
+    img_tag_regex: Regex,
+    tag_removal_regex: Regex,
+    attr_removal_regex: Regex,
+}
 
 impl HtmlProcessorImpl {
-    fn extract_content_between_tag(html: &str, tag: &str) -> Option<String> {
+    pub fn new() -> Result<Self> {
+        Ok(Self {
+            img_tag_regex: Regex::new(r#"<img[^>]*\bsrc\s*=\s*['"]([^'"]+)['"][^>]*>"#)
+                .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
+            tag_removal_regex: Regex::new(
+                r"(?si)<iframe.*?(</iframe>|/>)|<script.*?(</script>|/>)",
+            )
+            .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
+            attr_removal_regex: Regex::new(
+                r#"(?i)\b(on\w+|javascript:|data:)[^"'<>]*=['"][^"']*['"]"#,
+            )
+            .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
+        })
+    }
+
+    fn extract_content_between_tag(html: &str, tag: &str) -> Result<Option<String>> {
         // let start_tag = "<main";
-        let start_tag = Regex::new(&format!(r"(?i)<\s*{tag}[^>]*>")).unwrap();
+        let start_tag = Regex::new(&format!(r"(?i)<\s*{tag}[^>]*>"))
+            .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?;
         let end_tag = &format!("</{tag}>");
 
-        let start_tag = start_tag.find(html)?;
+        let start_tag = if let Some(st) = start_tag.find(html) {
+            st
+        } else {
+            return Ok(None);
+        };
 
         // Locate the start and end positions of the <article> content
         if let Some(end_idx) = html.find(end_tag) {
             // Extract the content between the <main> tags
             let start = start_tag.end();
             let article_content = &html[start..end_idx];
-            return Some(article_content.to_string());
+            return Ok(Some(article_content.to_string()));
         }
-        None
+
+        Ok(None)
     }
 }
 
 #[async_trait]
 impl HtmlProcessor for HtmlProcessorImpl {
-    fn process_html_article(html: &str) -> Result<String, Box<dyn std::error::Error>> {
-        let content = Self::extract_content_between_tag(html, "main");
+    fn process_html_article(&self, html: &str) -> Result<String> {
+        let content = Self::extract_content_between_tag(html, "main")?;
         if let Some(content) = content {
             return Ok(content);
         }
 
-        let content = Self::extract_content_between_tag(html, "article");
+        let content = Self::extract_content_between_tag(html, "article")?;
         if let Some(content) = content {
             return Ok(content);
         }
 
-        Err("unable to parse document".into())
-        /*
-        // let start_tag = "<main";
-        let start_tag = Regex::new(r"(?i)<\s*main[^>]*>").unwrap();
-        let end_tag = "</main>";
-
-        let start_tag = start_tag.find(html).ok_or("unable to find <main> tag")?;
-
-        // Locate the start and end positions of the <article> content
-        if let Some(end_idx) = html.find(end_tag) {
-            // Extract the content between the <main> tags
-            let start = start_tag.end();
-            let article_content = &html[start..end_idx];
-            return Ok(article_content.to_string());
-        }
-        Ok("".to_owned())
-        */
+        Err(HtmlProcessorError::UnableToParse)
     }
 
-    // TODO: We need to make this flexible in case we don't want to save the images to the fs
-    async fn fix_img_src(html: &str, link: &str, article_path: impl AsRef<Path> + Send) -> String {
-        let path = article_path.as_ref().join("static/");
-        fs::create_dir_all(&path)
-            .await
-            .expect("failed to create static dir");
-
+    async fn fix_img_src<P>(&self, html: &str, link: &str, image_processor: &P) -> Result<String>
+    where
+        P: ImageProcessor + ?Sized,
+    {
         // Regex to find <img> tags and capture the src attribute
-        let img_tag_regex = Regex::new(r#"<img[^>]*\bsrc\s*=\s*['"]([^'"]+)['"][^>]*>"#).unwrap();
         let mut fixed_html = String::new();
         let mut last_pos = 0;
 
         // Iterate over each match
-        for cap in img_tag_regex.captures_iter(html) {
+        for cap in self.img_tag_regex.captures_iter(html) {
             // Append the text before the current match
-            let mat = cap.get(0).unwrap();
+            let mat = cap.get(0).ok_or_else(|| {
+                HtmlProcessorError::Unexpected(anyhow::anyhow!(
+                    "could not extract information from matched tag"
+                ))
+            })?;
             fixed_html.push_str(&html[last_pos..mat.start()]);
 
             // Get the original <img> tag and src value
@@ -92,28 +100,18 @@ impl HtmlProcessor for HtmlProcessorImpl {
                 format!("{}{}", link, src_value)
             };
 
-            // TODO: If we can't get the image replace it with a placeholder
-            let image_data = reqwest::get(image_url)
-                .await
-                .expect("unable to get content url")
-                .bytes()
-                .await
-                .expect("unable to get content from content url");
+            let processed_image = image_processor.process_image_url(&image_url).await;
 
-            let mut image_path = path.clone();
+            let image_path = match &processed_image {
+                Ok(path) => path,
+                Err(e) => {
+                    tracing::error!("unable to process image: {e:?}");
+                    // TODO: use a self property
+                    "/static/error_processing_image.png"
+                }
+            };
 
-            image_path.push(Uuid::new_v4().to_string());
-
-            // Create the file and write the content
-            let mut file = fs::File::create(&image_path)
-                .await
-                .expect("unable to create image file");
-
-            fs::File::write(&mut file, &image_data)
-                .await
-                .expect("unable to write image file");
-
-            let corrected_tag = full_tag.replace(src_value, &format!("/{}", image_path.display())); // Replace the src value
+            let corrected_tag = full_tag.replace(src_value, &format!("/{}", image_path));
 
             // Append the corrected <img> tag
             fixed_html.push_str(&corrected_tag);
@@ -125,26 +123,18 @@ impl HtmlProcessor for HtmlProcessorImpl {
         // Append the remaining part of the HTML
         fixed_html.push_str(&html[last_pos..]);
 
-        fixed_html
+        Ok(fixed_html)
     }
 
-    fn sanitize(html: &str) -> String {
-        // Regex to remove script and iframe tags entirely
-        let tag_removal_regex =
-            Regex::new(r"(?si)<iframe.*?(</iframe>|/>)|<script.*?(</script>|/>)").unwrap();
-
-        // Regex to remove potentially harmful attributes
-        let attr_removal_regex =
-            Regex::new(r#"(?i)\b(on\w+|javascript:|data:)[^"'<>]*=['"][^"']*['"]"#).unwrap();
-
+    fn sanitize(&self, html: &str) -> Result<String> {
         // Step 1: Remove harmful tags like <script> or <iframe>
-        let sanitized_html = tag_removal_regex.replace_all(html, "");
+        let sanitized_html = self.tag_removal_regex.replace_all(html, "");
 
         // Step 2: Remove potentially harmful attributes
-        let sanitized_html = attr_removal_regex.replace_all(&sanitized_html, "");
+        let sanitized_html = self.attr_removal_regex.replace_all(&sanitized_html, "");
 
         // Return the sanitized HTML as a String
-        sanitized_html.to_string()
+        Ok(sanitized_html.to_string())
     }
 }
 
@@ -169,9 +159,9 @@ mod tests {
 </body>
 </html>
 "#;
-        let result = HtmlProcessorImpl::sanitize(iframe);
+        let result = HtmlProcessorImpl::new().unwrap().sanitize(iframe);
 
-        assert_eq!(expected, result);
+        assert_eq!(expected, result.unwrap());
     }
 
     #[test]
@@ -197,8 +187,8 @@ mod tests {
 </body>
 </html>
 "#;
-        let result = HtmlProcessorImpl::sanitize(iframe);
+        let result = HtmlProcessorImpl::new().unwrap().sanitize(iframe);
 
-        assert_eq!(expected, result);
+        assert_eq!(expected, result.unwrap());
     }
 }

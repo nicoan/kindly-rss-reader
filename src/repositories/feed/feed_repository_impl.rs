@@ -1,4 +1,7 @@
-use crate::{models::article::Article, repositories::feed::Feed};
+use crate::{
+    models::article::Article,
+    repositories::{feed::Feed, RepositoryError},
+};
 use axum::async_trait;
 use chrono::{DateTime, Utc};
 use sqlite::ConnectionThreadSafe;
@@ -21,63 +24,52 @@ impl FeedRepositoryImpl {
 
 #[async_trait]
 impl FeedRepository for FeedRepositoryImpl {
-    async fn get_feed_list(&self) -> Vec<Feed> {
+    async fn get_feed_list(&self) -> Result<Vec<Feed>, RepositoryError> {
         self.connection
             .prepare("SELECT * FROM feed")
             .unwrap()
             .into_iter()
-            .map(|row| {
-                let row = row.unwrap();
-                Feed {
-                    id: row.read::<&str, _>("id").into(),
-                    title: row.read::<&str, _>("title").into(),
-                    url: row.read::<&str, _>("url").into(),
-                    link: row.read::<&str, _>("link").into(),
-                    favicon_url: row
-                        .read::<Option<&str>, _>("favicon_path")
-                        .map(|s| s.to_owned()),
-                    last_updated: DateTime::from_str(row.read::<&str, _>("last_updated")).unwrap(),
-                }
-            })
+            .flat_map(|r| r.map(Feed::try_from))
             .collect()
     }
 
-    async fn get_feed(&self, feed_id: Uuid) -> Option<Feed> {
+    async fn get_feed(&self, feed_id: Uuid) -> Result<Option<Feed>, RepositoryError> {
         self.connection
             .prepare("SELECT * FROM feed WHERE id = ?")
-            .unwrap()
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?
             .into_iter()
             .bind((1, feed_id.to_string().as_str()))
-            .unwrap()
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?
             .nth(0)
-            .map(|row| {
-                let row = row.unwrap();
-                Feed {
-                    id: row.read::<&str, _>("id").into(),
-                    title: row.read::<&str, _>("title").into(),
-                    url: row.read::<&str, _>("url").into(),
-                    link: row.read::<&str, _>("link").into(),
-                    favicon_url: row
-                        .read::<Option<&str>, _>("favicon_path")
-                        .map(|s| s.to_owned()),
-                    last_updated: DateTime::from_str(row.read::<&str, _>("last_updated")).unwrap(),
-                }
+            .map(|r| {
+                r.map_err(|e| RepositoryError::Unexpcted(e.into()))
+                    .and_then(Feed::try_from)
             })
+            .transpose()
     }
 
-    async fn add_feed(&self, feed: Feed) {
-        let query = format!(
-            r#"
-                    INSERT INTO feed (id, title, url, link, last_updated)
-                    VALUES ('{}', '{}', '{}', '{}', '1970-01-01T00:00:00Z');
-                "#,
-            feed.id,
-            feed.title.replace("'", "''"),
-            feed.url,
-            feed.link,
-        );
-        println!("{query}");
-        self.connection.execute(query).unwrap();
+    async fn add_feed(&self, feed: Feed) -> Result<(), RepositoryError> {
+        let statement = r#"
+                        INSERT INTO feed (id, title, url, link, last_updated)
+                        VALUES (?, ?, ?, ?, ?);
+                    "#;
+
+        self.connection
+            .prepare(statement)
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?
+            .into_iter()
+            .bind((1, feed.id.as_str()))
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?
+            .bind((2, feed.title.as_str()))
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?
+            .bind((3, feed.url.as_str()))
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?
+            .bind((4, feed.link.as_str()))
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?
+            .bind((5, feed.last_updated.to_rfc3339().as_str()))
+            .map_err(|e| RepositoryError::Unexpcted(e.into()))?;
+
+        Ok(())
     }
 
     async fn get_feed_articles(&self, feed_id: Uuid) -> Vec<Article> {

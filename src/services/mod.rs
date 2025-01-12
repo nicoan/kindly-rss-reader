@@ -1,6 +1,5 @@
 pub mod feed;
-pub mod rss;
 pub mod templates;
 
-pub(crate) use rss::RssService;
+pub(crate) use feed::FeedService;
 pub(crate) use templates::TemplateService;

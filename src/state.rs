@@ -10,7 +10,6 @@ use crate::{
     repositories::feed::FeedRepositoryImpl,
     services::{
         feed::{FeedService, FeedServiceImpl},
-        rss::{RssService, RssServiceImpl},
         templates::{
             TemplateService, TemplateServiceImpl, TEMPLATE_NAME_ARTICLE,
             TEMPLATE_NAME_ARTICLE_LIST, TEMPLATE_NAME_COMMON_HEAD, TEMPLATE_NAME_FEED_LIST,
@@ -23,20 +22,16 @@ use crate::{
 #[derive(Clone)]
 pub struct State {
     pub template_service: TemplateServiceImpl<'static>,
-    pub rss_service: RssServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>,
-    pub feed_service: FeedServiceImpl<FeedRepositoryImpl>,
+    pub feed_service: FeedServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>,
 }
 
 pub trait AppState: Sync + Send + Clone + 'static {
     // Services
     type TS: TemplateService<'static>;
-    type RS: RssService;
     type FS: FeedService;
 
     // Services
     fn template_service(&self) -> &Self::TS;
-
-    fn rss_service(&self) -> &Self::RS;
 
     fn feed_service(&self) -> &Self::FS;
 }
@@ -49,6 +44,10 @@ impl State {
         // Initialize repositories
         let feed_repository = Arc::new(FeedRepositoryImpl::new(connection));
 
+        // Initialize providers
+        let html_processor_provider =
+            HtmlProcessorImpl::new().expect("unable to initialize html processor");
+
         // Initialize template service
         let mut template_service = TemplateServiceImpl::new();
         template_service.register_template(TEMPLATE_NAME_ARTICLE, TEMPLATE_PATH_ARTICLE);
@@ -60,23 +59,17 @@ impl State {
 
         Self {
             template_service,
-            rss_service: RssServiceImpl::new(feed_repository.clone(), HtmlProcessorImpl),
-            feed_service: FeedServiceImpl::new(feed_repository),
+            feed_service: FeedServiceImpl::new(feed_repository, Arc::new(html_processor_provider)),
         }
     }
 }
 
 impl AppState for State {
     type TS = TemplateServiceImpl<'static>;
-    type RS = RssServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>;
-    type FS = FeedServiceImpl<FeedRepositoryImpl>;
+    type FS = FeedServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>;
 
     fn template_service(&self) -> &Self::TS {
         &self.template_service
-    }
-
-    fn rss_service(&self) -> &Self::RS {
-        &self.rss_service
     }
 
     fn feed_service(&self) -> &Self::FS {

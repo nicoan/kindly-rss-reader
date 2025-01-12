@@ -1,9 +1,8 @@
-use crate::controllers::rss::{add_new_feed, add_new_feed_form, get_article};
 use axum::{routing::get, Router};
 use tower_http::services::{ServeDir, ServeFile};
 
 use crate::{
-    controllers::rss::{get_article_list, get_feed_list},
+    controllers::{add_new_feed, add_new_feed_form, get_article, get_article_list, get_feed_list},
     state::AppState,
 };
 

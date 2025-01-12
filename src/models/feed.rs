@@ -1,5 +1,10 @@
+use std::str::FromStr;
+
 use chrono::{DateTime, Utc};
 use serde::Serialize;
+use sqlite::Row;
+
+use crate::repositories::RepositoryError;
 
 #[derive(Serialize)]
 pub struct Feed {
@@ -9,4 +14,22 @@ pub struct Feed {
     pub link: String,
     pub favicon_url: Option<String>,
     pub last_updated: DateTime<Utc>,
+}
+
+impl TryFrom<Row> for Feed {
+    type Error = RepositoryError;
+
+    fn try_from(row: Row) -> Result<Self, Self::Error> {
+        Ok(Feed {
+            id: row.read::<&str, _>("id").into(),
+            title: row.read::<&str, _>("title").into(),
+            url: row.read::<&str, _>("url").into(),
+            link: row.read::<&str, _>("link").into(),
+            favicon_url: row
+                .read::<Option<&str>, _>("favicon_path")
+                .map(|s| s.to_owned()),
+            last_updated: DateTime::from_str(row.read::<&str, _>("last_updated"))
+                .map_err(|e: chrono::ParseError| RepositoryError::Deserialization(e.into()))?,
+        })
+    }
 }
