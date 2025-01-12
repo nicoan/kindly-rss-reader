@@ -1,7 +1,4 @@
-use crate::{
-    providers::html_processor::HtmlProcessorImpl,
-    services::templates::{TEMPLATE_NAME_FEED_ADD, TEMPLATE_PATH_FEED_ADD},
-};
+use crate::{providers::html_processor::HtmlProcessorImpl, services::templates::TEMPLATES};
 use std::sync::Arc;
 
 use sqlite::ConnectionThreadSafe;
@@ -10,12 +7,7 @@ use crate::{
     repositories::feed::FeedRepositoryImpl,
     services::{
         feed::{FeedService, FeedServiceImpl},
-        templates::{
-            TemplateService, TemplateServiceImpl, TEMPLATE_NAME_ARTICLE,
-            TEMPLATE_NAME_ARTICLE_LIST, TEMPLATE_NAME_COMMON_HEAD, TEMPLATE_NAME_FEED_LIST,
-            TEMPLATE_NAME_TOOLBAR, TEMPLATE_PATH_ARTICLE, TEMPLATE_PATH_ARTICLE_LIST,
-            TEMPLATE_PATH_COMMON_HEAD, TEMPLATE_PATH_FEED_LIST, TEMPLATE_PATH_TOOLBAR,
-        },
+        templates::{TemplateService, TemplateServiceImpl},
     },
 };
 
@@ -50,12 +42,11 @@ impl State {
 
         // Initialize template service
         let mut template_service = TemplateServiceImpl::new();
-        template_service.register_template(TEMPLATE_NAME_ARTICLE, TEMPLATE_PATH_ARTICLE);
-        template_service.register_template(TEMPLATE_NAME_ARTICLE_LIST, TEMPLATE_PATH_ARTICLE_LIST);
-        template_service.register_template(TEMPLATE_NAME_COMMON_HEAD, TEMPLATE_PATH_COMMON_HEAD);
-        template_service.register_template(TEMPLATE_NAME_FEED_ADD, TEMPLATE_PATH_FEED_ADD);
-        template_service.register_template(TEMPLATE_NAME_FEED_LIST, TEMPLATE_PATH_FEED_LIST);
-        template_service.register_template(TEMPLATE_NAME_TOOLBAR, TEMPLATE_PATH_TOOLBAR);
+        for (name, path) in TEMPLATES {
+            template_service
+                .register_template(name, path)
+                .expect("there was an error registering a template");
+        }
 
         Self {
             template_service,
