@@ -1,13 +1,11 @@
 <html>
     <head>
         {% include "common_head" %}
-        <link rel="stylesheet" href="/static/css/article_list.css">
-        <link rel="stylesheet" href="/static/css/article.css">
     </head>
     <body>
         <main class="main">
             <div class="content">
-                <div class="section-header">
+                <div id="header" class="section-header">
                     <h1> Feed list </h1>
                     <div class="section-header-buttons">
                         <a href="/feed/add">
@@ -19,7 +17,7 @@
                         </a>
                     </div>
                 </div>
-                <div id="article" class="article-list">
+                <div id="body" class="list">
                     {% for feed in feeds %}
                     <a href="feed/{{ feed.id }}">
                         <h3> {{ feed.title }} </h3>

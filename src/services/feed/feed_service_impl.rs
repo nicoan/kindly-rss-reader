@@ -71,6 +71,10 @@ where
         Ok(self.feed_repository.get_feed_list().await?)
     }
 
+    async fn get_feed(&self, feed_id: Uuid) -> Result<Option<Feed>> {
+        Ok(self.feed_repository.get_feed(feed_id).await?)
+    }
+
     async fn add_feed(&self, feed_url: Url) -> Result<()> {
         let content = Self::download_feed_content(feed_url.as_str()).await?;
 
@@ -95,7 +99,7 @@ where
         let feed = self.feed_repository.get_feed(feed_id).await?;
         if let Some(feed) = feed {
             // TODO: 120 must be a config
-            if Utc::now() - feed.last_updated > TimeDelta::minutes(120) {
+            let mut articles = if Utc::now() - feed.last_updated > TimeDelta::minutes(120) {
                 let content = Self::download_feed_content(feed.url.as_str()).await?;
                 let rss_channel = rss::Channel::read_from(&content[..])
                     .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
@@ -113,12 +117,10 @@ where
                     .into_iter()
                     .filter(|item| {
                         if let Some(guid) = &item.guid().map(|g| g.value()) {
-                            tracing::info!("{guid}");
                             !articles_guid.contains(guid)
                         // We filter by link because if guid is not found, we identify the article
                         // by its link
                         } else if let Some(link) = &item.link() {
-                            tracing::info!("{link}");
                             !articles_guid.contains(link)
                         } else {
                             tracing::warn!(
@@ -176,7 +178,6 @@ where
                         else {
                             let article = Self::download_html_article(&article_link).await?;
 
-                            // TODO: Create an HTML processor error
                             &html_processor
                                 .process_html_article(&article)
                                 .map_err(|e| FeedServiceError::Unexpected(anyhow::anyhow!(e)))?
@@ -242,11 +243,18 @@ where
                     }
                 }
 
-                self.feed_repository.add_articles(feed_id, articles).await?;
-            }
+                self.feed_repository
+                    .add_articles(feed_id, &articles)
+                    .await?;
 
-            // TODO: Just prepend the new articles to saved_articles
-            let articles = self.feed_repository.get_feed_articles(feed_id).await?;
+                articles.extend(saved_articles);
+
+                articles
+            } else {
+                self.feed_repository.get_feed_articles(feed_id).await?
+            };
+
+            articles.sort_by(|a1, a2| a1.last_updated.cmp(&a2.last_updated));
 
             Ok((feed, articles))
         } else {

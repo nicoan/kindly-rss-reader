@@ -16,6 +16,8 @@ pub(crate) type Result<T> = std::result::Result<T, FeedServiceError>;
 pub(crate) trait FeedService: Sync + Send {
     async fn get_feed_list(&self) -> Result<Vec<Feed>>;
 
+    async fn get_feed(&self, feed_id: Uuid) -> Result<Option<Feed>>;
+
     async fn add_feed(&self, feed_url: Url) -> Result<()>;
 
     async fn get_channel(&self, feed_id: Uuid) -> Result<(Feed, Vec<Article>)>;

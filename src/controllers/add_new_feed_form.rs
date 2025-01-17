@@ -1,5 +1,4 @@
-use crate::services::templates::TEMPLATE_NAME_FEED_ADD;
-use crate::services::TemplateService;
+use crate::services::templates::{TemplateService, TEMPLATE_NAME_FEED_ADD};
 use crate::state::AppState;
 use axum::{extract::State, response::Html};
 use minijinja::context;

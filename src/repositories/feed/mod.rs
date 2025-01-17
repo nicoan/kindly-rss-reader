@@ -21,7 +21,7 @@ pub trait FeedRepository: Sync + Send {
 
     async fn get_feed_list(&self) -> Result<Vec<Feed>>;
 
-    async fn add_articles(&self, feed_id: Uuid, articles: Vec<Article>) -> Result<()>;
+    async fn add_articles(&self, feed_id: Uuid, articles: &[Article]) -> Result<()>;
 
     async fn get_article_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<Option<String>>;
 

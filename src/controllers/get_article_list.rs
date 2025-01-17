@@ -1,6 +1,5 @@
 use crate::services::feed::FeedService;
-use crate::services::templates::TEMPLATE_NAME_ARTICLE_LIST;
-use crate::services::TemplateService;
+use crate::services::templates::{TemplateService, TEMPLATE_NAME_ARTICLE_LIST};
 use crate::state::AppState;
 use axum::extract::Path;
 use axum::{extract::State, response::Html};

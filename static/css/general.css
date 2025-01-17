@@ -64,3 +64,40 @@ button:focus {
 #middle-space-toolbar {
     height: 100%;
 }
+
+p {
+    text-align: justify;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 10px 5px;
+}
+
+sub {
+    font-family: Calibri, Helvetica, Sans-Serif;
+    margin: 0;
+}
+
+.list {
+    overflow: auto;
+    padding: 8px;
+}
+
+.list::-webkit-scrollbar { width: 0 !important }
+
+.list h1,
+.list h2,
+.list h3,
+.list h4,
+.list h5,
+.list h6 {
+    margin: 5px;
+}
+
+.body {
+    overflow: auto;
+    padding: 10px;
+}
+
+.body::-webkit-scrollbar { width: 0 !important }
+

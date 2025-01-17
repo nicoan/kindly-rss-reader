@@ -94,7 +94,7 @@ impl FeedRepository for FeedRepositoryImpl {
     async fn add_articles(
         &self,
         feed_id: Uuid,
-        articles: Vec<Article>,
+        articles: &[Article],
     ) -> Result<(), RepositoryError> {
         let now = Utc::now().to_rfc3339();
         let feed_id = feed_id.to_string();

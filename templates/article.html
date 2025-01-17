@@ -2,11 +2,18 @@
     <head>
         {% include "common_head" %}
         <link rel="stylesheet" href="/static/css/article.css">
+        <link rel="stylesheet" href="/static/css/article_list.css">
     </head>
     <body>
         <main class="main">
-            <div id="article" class="article">
-                {{ article }}
+            <div class="content">
+                <div id="header">
+                    <h1> {{ feed.title }} </h1>
+                    <hr/>
+                </div>
+                <div id="body" class="body">
+                    {{ article }}
+                </div>
             </div>
             {% include "toolbar" %}
         </main>

@@ -7,9 +7,6 @@ pub enum FeedServiceError {
     #[error("the content of article {0} of feed {1} was not found")]
     ArticleContentNotFound(Uuid, Uuid),
 
-    #[error("the article {0} of feed {1} was not found")]
-    ArticleNotFound(Uuid, Uuid),
-
     #[error("there was an error getting the article: {0:?}")]
     GettingArticle(#[source] reqwest::Error),
 
