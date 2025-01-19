@@ -81,10 +81,23 @@ where
         let rss_channel = rss::Channel::read_from(&content[..])
             .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
 
+        let link_path = feed_url.path_segments();
+        let link = if let Some(link_path) = link_path {
+            let mut final_path = link_path.collect::<Vec<&str>>();
+            final_path.remove(final_path.len() - 1);
+            let final_path = final_path.join("/");
+            let mut link = feed_url.origin().unicode_serialization();
+            link.push('/');
+            link.push_str(&final_path);
+            link
+        } else {
+            feed_url.origin().unicode_serialization()
+        };
+
         let feed = Feed {
             id: Uuid::new_v4().to_string(),
             title: rss_channel.title,
-            link: feed_url.origin().unicode_serialization(),
+            link,
             url: feed_url.into(),
             favicon_url: None,
             last_updated: DateTime::default(),

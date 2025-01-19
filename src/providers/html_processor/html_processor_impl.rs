@@ -102,7 +102,11 @@ impl HtmlProcessor for HtmlProcessorImpl {
                 src_value.to_owned()
             } else {
                 // Prepend the base link to the src value
-                format!("{}{}", link, src_value)
+                if !src_value.starts_with("/") && !link.ends_with("/") {
+                    format!("{}/{}", link, src_value)
+                } else {
+                    format!("{}{}", link, src_value)
+                }
             };
 
             let processed_image = image_processor.process_image_url(&image_url).await;
