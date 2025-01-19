@@ -18,7 +18,7 @@ pub(crate) struct ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
-        tracing::error!("{:?}", &self.original_error);
+        tracing::error!("{}", &self.original_error);
         axum::response::Html(format!("<h1> {} </h1>", self.message)).into_response()
     }
 }

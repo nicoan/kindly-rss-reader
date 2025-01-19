@@ -269,7 +269,7 @@ where
                 self.feed_repository.get_feed_articles(feed_id).await?
             };
 
-            articles.sort_by(|a1, a2| a1.last_updated.cmp(&a2.last_updated));
+            articles.sort_by(|a1, a2| a2.last_updated.cmp(&a1.last_updated));
 
             Ok((feed, articles))
         } else {

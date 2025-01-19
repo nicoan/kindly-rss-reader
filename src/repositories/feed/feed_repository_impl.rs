@@ -96,7 +96,6 @@ impl FeedRepository for FeedRepositoryImpl {
         feed_id: Uuid,
         articles: &[Article],
     ) -> Result<(), RepositoryError> {
-        let now = Utc::now().to_rfc3339();
         let feed_id = feed_id.to_string();
 
         self.connection.execute("BEGIN")?;
@@ -108,27 +107,31 @@ impl FeedRepository for FeedRepositoryImpl {
                     VALUES (:id, :feed_id, :title, :author, :guid, :link, :last_updated, :html_parsed, :content, 0)
                     ON CONFLICT(guid) DO NOTHING;
                 )"#)?;
-            stmt.bind((":id", Uuid::new_v4().to_string().as_str()))?;
+            stmt.bind((":id", article.id.to_string().as_str()))?;
             stmt.bind((":feed_id", feed_id.as_str()))?;
             stmt.bind((":title", article.title.as_str()))?;
             stmt.bind((":author", article.author.as_str()))?;
             stmt.bind((":guid", article.guid.as_str()))?;
             stmt.bind((":link", article.link.as_str()))?;
-            stmt.bind((":last_updated", now.as_str()))?;
+            stmt.bind((":last_updated", article.last_updated.to_rfc3339().as_str()))?;
             stmt.bind((":html_parsed", if article.html_parsed { 1 } else { 0 }))?;
             stmt.bind((":content", article.content.as_deref().unwrap_or("NULL")))?;
 
             // Execute the statement
             stmt.next()?;
+            stmt.reset()?;
+            drop(stmt);
         }
 
         let mut stmt = self
             .connection
             .prepare("UPDATE feed SET last_updated = ? WHERE id = ?")?;
-        stmt.bind((1, now.as_str()))?;
+        stmt.bind((1, Utc::now().to_rfc3339().as_str()))?;
         stmt.bind((2, feed_id.as_str()))?;
 
         stmt.next()?;
+        stmt.reset()?;
+        drop(stmt);
 
         self.connection.execute("COMMIT")?;
 
@@ -142,7 +145,7 @@ impl FeedRepository for FeedRepositoryImpl {
     ) -> Result<Option<String>, RepositoryError> {
         let file_path = self
             .connection
-            .prepare("SELECT * FROM article WHERE id = ? AND feed_id = ?")?
+            .prepare("SELECT content FROM article WHERE id = ? AND feed_id = ?")?
             .into_iter()
             .bind((1, article_id.to_string().as_str()))?
             .bind((2, feed_id.to_string().as_str()))?
@@ -169,7 +172,6 @@ impl FeedRepository for FeedRepositoryImpl {
         feed_id: Uuid,
         date: DateTime<Utc>,
     ) -> Result<(), RepositoryError> {
-        // TODO: Prepare statement
         self.connection.execute("BEGIN")?;
         let mut stmt = self
             .connection
@@ -179,6 +181,8 @@ impl FeedRepository for FeedRepositoryImpl {
 
         // execute the statement
         stmt.next()?;
+        stmt.reset()?;
+        drop(stmt);
         self.connection.execute("COMMIT")?;
 
         Ok(())
