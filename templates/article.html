@@ -12,6 +12,10 @@
                     <hr/>
                 </div>
                 <div id="body" class="body">
+                    {% if not article_data.html_parsed %}
+                    <h1> {{ article_data.title }} </h1>
+                    {% endif %}
+
                     {{ article }}
                 </div>
             </div>

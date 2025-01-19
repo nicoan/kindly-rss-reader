@@ -26,4 +26,7 @@ pub trait HtmlProcessor: Sync + Send {
     /// Sanitizes the HTML
     /// Removes potentially harmful tags such as <iframe> and <script>
     fn sanitize(&self, html: &str) -> Result<String>;
+
+    /// Obtains the fav icon url
+    fn get_favicon_url(&self, html: &str) -> Option<String>;
 }

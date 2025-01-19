@@ -22,5 +22,5 @@ pub(crate) trait FeedService: Sync + Send {
 
     async fn get_channel(&self, feed_id: Uuid) -> Result<(Feed, Vec<Article>)>;
 
-    async fn get_item_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<String>;
+    async fn get_item_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<(Article, String)>;
 }

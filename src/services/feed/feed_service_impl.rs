@@ -171,22 +171,23 @@ where
                             })?;
 
                         // If the items have content, we cache it in the fs
-                        let content = if let Some(content) = article.content() {
-                            content
+                        let (html_parsed, content) = if let Some(content) = article.content() {
+                            (false, content.to_owned())
                         }
                         // Otherwise we follow the linka and download the html
                         else {
                             let article = Self::download_html_article(&article_link).await?;
-
-                            &html_processor
+                            let content = html_processor
                                 .process_html_article(&article)
                                 .map_err(|e| FeedServiceError::Unexpected(anyhow::anyhow!(e)))?
-                                .to_owned()
+                                .to_owned();
+
+                            (true, content)
                         };
 
                         // Fix img src in contents
                         let content = html_processor
-                            .fix_img_src(content, &feed_link, &*img_processor)
+                            .fix_img_src(&content, &feed_link, &*img_processor)
                             .await
                             .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
 
@@ -226,7 +227,8 @@ where
                                     "an article for the feed {feed_id} does not have a guid"
                                 ))
                             })?,
-                            path: Some(file_path),
+                            html_parsed,
+                            content: Some(file_path),
                             read: false,
                             last_updated: date,
                         })
@@ -262,14 +264,19 @@ where
         }
     }
 
-    async fn get_item_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<String> {
+    async fn get_item_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<(Article, String)> {
         let content = self
             .feed_repository
             .get_article_content(feed_id, article_id)
             .await?;
 
-        if let Some(content) = content {
-            Ok(content)
+        let article_data = self
+            .feed_repository
+            .get_article_description(feed_id, article_id)
+            .await?;
+
+        if let (Some(article_data), Some(content)) = (article_data, content) {
+            Ok((article_data, content))
         } else {
             Err(FeedServiceError::ArticleContentNotFound(
                 article_id, feed_id,

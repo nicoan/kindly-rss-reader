@@ -7,34 +7,26 @@ use axum::{extract::State, response::Html};
 use minijinja::context;
 use uuid::Uuid;
 
+use super::ApiError;
+
 pub async fn get_article<S>(
     State(state): State<S>,
     Path((feed_id, article_id)): Path<(Uuid, Uuid)>,
-) -> Result<Html<String>, Html<String>>
+) -> Result<Html<String>, ApiError>
 where
     S: AppState,
 {
-    let feed = state.feed_service().get_feed(feed_id).await.map_err(|e| {
-        tracing::error!("{:?}", e);
-        Html("<h1> Feed not found </h1>".to_owned())
-    })?;
+    let feed = state.feed_service().get_feed(feed_id).await?;
 
-    let content = state
+    let (article_data, content) = state
         .feed_service()
         .get_item_content(feed_id, article_id)
-        .await
-        .unwrap_or("<h1> Article not found </h1>".to_owned());
+        .await?;
 
-    let rendered_article = state
-        .template_service()
-        .render_template(
-            TEMPLATE_NAME_ARTICLE,
-            context! { feed => feed, article => content },
-        )
-        .unwrap_or(
-            "<h1> There was an error rendering the article. Please check the logs. </h1>"
-                .to_owned(),
-        );
+    let rendered_article = state.template_service().render_template(
+        TEMPLATE_NAME_ARTICLE,
+        context! { feed => feed, article => content, article_data => article_data },
+    )?;
 
     Ok(Html(rendered_article))
 }

@@ -12,6 +12,7 @@ pub struct HtmlProcessorImpl {
     img_tag_regex: Regex,
     tag_removal_regex: Regex,
     attr_removal_regex: Regex,
+    favicon_url: Regex,
 }
 
 impl HtmlProcessorImpl {
@@ -25,6 +26,10 @@ impl HtmlProcessorImpl {
             .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
             attr_removal_regex: Regex::new(
                 r#"(?i)\b(on\w+|javascript:|data:)[^"'<>]*=['"][^"']*['"]"#,
+            )
+            .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
+            favicon_url: regex::Regex::new(
+                r#"(?i)<link[^>]*rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']"#,
             )
             .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
         })
@@ -135,6 +140,17 @@ impl HtmlProcessor for HtmlProcessorImpl {
 
         // Return the sanitized HTML as a String
         Ok(sanitized_html.to_string())
+    }
+
+    // Function to extract favicon URL from the HTML
+    fn get_favicon_url(&self, html: &str) -> Option<String> {
+        if let Some(captures) = self.favicon_url.captures(html) {
+            if let Some(href) = captures.get(1) {
+                return Some(href.as_str().to_string());
+            }
+        }
+
+        None
     }
 }
 

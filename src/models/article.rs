@@ -17,8 +17,9 @@ pub struct Article {
     pub link: String,
     // Rename this to content, in databases like postgre we can save it directly in a column, in
     // SQLite we rely on the fs
-    pub path: Option<String>,
+    pub content: Option<String>,
     pub read: bool,
+    pub html_parsed: bool,
     pub last_updated: DateTime<Utc>,
 }
 
@@ -39,8 +40,9 @@ impl TryFrom<Row> for Article {
             author: row.read::<&str, _>("author").into(),
             link: row.read::<&str, _>("link").into(),
             guid: row.read::<&str, _>("guid").into(),
-            path: row.read::<Option<&str>, _>("path").map(|s| s.to_owned()),
+            content: row.read::<Option<&str>, _>("content").map(|s| s.to_owned()),
             read: row.read::<i64, _>("read") != 0,
+            html_parsed: row.read::<i64, _>("read") != 0,
             last_updated: DateTime::from_str(row.read::<&str, _>("last_updated"))
                 .map_err(|e: chrono::ParseError| RepositoryError::Deserialization(e.into()))?,
         })

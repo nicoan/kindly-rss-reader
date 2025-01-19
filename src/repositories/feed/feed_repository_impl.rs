@@ -104,8 +104,8 @@ impl FeedRepository for FeedRepositoryImpl {
         for article in articles {
             let mut stmt = self.connection.prepare(
                 r#"
-                    INSERT INTO article (id, feed_id, title, author, guid, link, last_updated, path, read)
-                    VALUES (:id, :feed_id, :title, :author, :guid, :link, :last_updated, :path, 0)
+                    INSERT INTO article (id, feed_id, title, author, guid, link, last_updated, html_parsed, content, read)
+                    VALUES (:id, :feed_id, :title, :author, :guid, :link, :last_updated, :html_parsed, :content, 0)
                     ON CONFLICT(guid) DO NOTHING;
                 )"#)?;
             stmt.bind((":id", Uuid::new_v4().to_string().as_str()))?;
@@ -115,7 +115,8 @@ impl FeedRepository for FeedRepositoryImpl {
             stmt.bind((":guid", article.guid.as_str()))?;
             stmt.bind((":link", article.link.as_str()))?;
             stmt.bind((":last_updated", now.as_str()))?;
-            stmt.bind((":path", article.path.as_deref().unwrap_or("NULL")))?;
+            stmt.bind((":html_parsed", if article.html_parsed { 1 } else { 0 }))?;
+            stmt.bind((":content", article.content.as_deref().unwrap_or("NULL")))?;
 
             // Execute the statement
             stmt.next()?;
@@ -148,7 +149,7 @@ impl FeedRepository for FeedRepositoryImpl {
             .nth(0)
             .map(|r| {
                 r.map_err(|e| RepositoryError::Unexpcted(e.into()))
-                    .map(|row| row.read::<&str, _>("path").to_owned())
+                    .map(|row| row.read::<&str, _>("content").to_owned())
             })
             .transpose()?;
 

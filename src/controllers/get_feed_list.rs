@@ -4,23 +4,17 @@ use crate::state::AppState;
 use axum::{extract::State, response::Html};
 use minijinja::context;
 
-pub async fn get_feed_list<S>(State(state): State<S>) -> Html<String>
+use super::ApiError;
+
+pub async fn get_feed_list<S>(State(state): State<S>) -> Result<Html<String>, ApiError>
 where
     S: AppState,
 {
-    let feeds = state.feed_service().get_feed_list().await;
+    let feeds = state.feed_service().get_feed_list().await?;
 
-    let rendered_html = if let Ok(feeds) = feeds {
-        state
-            .template_service()
-            .render_template(TEMPLATE_NAME_FEED_LIST, context! { feeds => feeds })
-            .unwrap_or(
-                "<h1> There was an error rendering the feed list. Please check the logs. </h1>"
-                    .to_owned(),
-            )
-    } else {
-        "<h1> There was an error getting the feed list. Please check the logs. </h1>".to_owned()
-    };
+    let rendered_html = state
+        .template_service()
+        .render_template(TEMPLATE_NAME_FEED_LIST, context! { feeds => feeds })?;
 
-    Html(rendered_html)
+    Ok(Html(rendered_html))
 }

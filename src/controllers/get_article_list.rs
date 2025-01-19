@@ -6,26 +6,21 @@ use axum::{extract::State, response::Html};
 use minijinja::context;
 use uuid::Uuid;
 
-pub async fn get_article_list<S>(State(state): State<S>, Path(feed_id): Path<Uuid>) -> Html<String>
+use super::ApiError;
+
+pub async fn get_article_list<S>(
+    State(state): State<S>,
+    Path(feed_id): Path<Uuid>,
+) -> Result<Html<String>, ApiError>
 where
     S: AppState,
 {
-    let article_list = state.feed_service().get_channel(feed_id).await;
+    let (feed, articles) = state.feed_service().get_channel(feed_id).await?;
 
-    let rendered_html = if let Ok((feed, articles)) = article_list {
-        state
-            .template_service()
-            .render_template(
-                TEMPLATE_NAME_ARTICLE_LIST,
-                context! { feed => feed, articles => articles },
-            )
-            .unwrap_or(
-                "<h1> There was an error rendering the article list. Please check the logs. </h1>"
-                    .to_owned(),
-            )
-    } else {
-        "<h1> There was an error getting the article list. Please check the logs. </h1>".to_owned()
-    };
+    let rendered_html = state.template_service().render_template(
+        TEMPLATE_NAME_ARTICLE_LIST,
+        context! { feed => feed, articles => articles },
+    )?;
 
-    Html(rendered_html)
+    Ok(Html(rendered_html))
 }
