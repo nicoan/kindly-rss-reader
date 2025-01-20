@@ -1,6 +1,7 @@
 use super::error::FeedServiceError;
 use super::FeedService;
 use super::Result;
+use crate::config::Config;
 use crate::models::article::Article;
 use crate::providers::html_processor::HtmlProcessor;
 use crate::providers::image_processor::ImageProcessorFsImpl;
@@ -28,6 +29,7 @@ where
 {
     feed_repository: Arc<FR>,
     html_processor: Arc<HP>,
+    config: Arc<Config>,
 }
 
 impl<FR, HP> FeedServiceImpl<FR, HP>
@@ -35,10 +37,11 @@ where
     FR: FeedRepository,
     HP: HtmlProcessor + 'static,
 {
-    pub fn new(feed_repository: Arc<FR>, html_processor: Arc<HP>) -> Self {
+    pub fn new(feed_repository: Arc<FR>, html_processor: Arc<HP>, config: Arc<Config>) -> Self {
         Self {
             feed_repository,
             html_processor,
+            config,
         }
     }
 
@@ -155,7 +158,7 @@ where
 
                 let mut join_set: JoinSet<Result<Article>> = JoinSet::new();
                 let feed_link = Arc::new(feed.link.clone());
-                let file_path = format!("articles/{feed_id}");
+                let file_path = format!("{}/articles/{feed_id}", self.config.data_path);
                 let image_processor = Arc::new(ImageProcessorFsImpl::new(file_path));
 
                 // Create the articles from the channel items
@@ -163,10 +166,12 @@ where
                     let feed_link = feed_link.clone();
                     let img_processor = image_processor.clone();
                     let html_processor = self.html_processor.clone();
+                    let config = self.config.clone();
                     join_set.spawn(async move {
                         let article_id = Uuid::new_v4();
 
-                        let file_path = format!("articles/{feed_id}/{article_id}.html");
+                        let file_path =
+                            format!("{}/articles/{feed_id}/{article_id}.html", config.data_path);
                         let file_directory = Path::new(&file_path).parent().ok_or_else(|| {
                             FeedServiceError::Unexpected(anyhow::anyhow!(format!(
                                 "there was an error getting the parent path for {file_path}"

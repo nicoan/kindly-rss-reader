@@ -1,4 +1,6 @@
-use crate::{providers::html_processor::HtmlProcessorImpl, services::templates::TEMPLATES};
+use crate::{
+    config::Config, providers::html_processor::HtmlProcessorImpl, services::templates::TEMPLATES,
+};
 use std::sync::Arc;
 
 use sqlite::ConnectionThreadSafe;
@@ -29,7 +31,7 @@ pub trait AppState: Sync + Send + Clone + 'static {
 }
 
 impl State {
-    pub fn new(connection: ConnectionThreadSafe) -> Self {
+    pub fn new(connection: ConnectionThreadSafe, config: Arc<Config>) -> Self {
         // Database connection
         let connection = Arc::new(connection);
 
@@ -38,19 +40,19 @@ impl State {
 
         // Initialize providers
         let html_processor_provider =
-            HtmlProcessorImpl::new().expect("unable to initialize html processor");
+            Arc::new(HtmlProcessorImpl::new().expect("unable to initialize html processor"));
 
         // Initialize template service
         let mut template_service = TemplateServiceImpl::new();
         for (name, path) in TEMPLATES {
             template_service
-                .register_template(name, path)
+                .register_template(name, format!("{}/{path}", config.static_data_path))
                 .expect("there was an error registering a template");
         }
 
         Self {
             template_service,
-            feed_service: FeedServiceImpl::new(feed_repository, Arc::new(html_processor_provider)),
+            feed_service: FeedServiceImpl::new(feed_repository, html_processor_provider, config),
         }
     }
 }
