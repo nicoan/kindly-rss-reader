@@ -12,7 +12,7 @@ body {
 
 main {
     display: flex;
-    height: 100%;
+    height: 100vh;
     overflow: hidden;
 }
 
@@ -25,7 +25,10 @@ img {
 }
 
 .content {
-    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .content::-webkit-scrollbar { width: 0 !important }
@@ -37,6 +40,7 @@ img {
     flex-direction: column;
     align-items: center;
     padding: 15px;
+    flex-shrink: 0;
 }
 
 .button {
@@ -99,7 +103,8 @@ sub {
 }
 
 .body {
-    overflow: auto;
+    flex: 1;
+    overflow-y: auto;
     padding: 10px;
 }
 
