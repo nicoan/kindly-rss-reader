@@ -101,11 +101,10 @@ impl HtmlProcessor for HtmlProcessorImpl {
             {
                 src_value.to_owned()
             } else {
-                // Prepend the base link to the src value
-                if !src_value.starts_with("/") && !link.ends_with("/") {
-                    format!("{}/{}", link, src_value)
-                } else {
-                    format!("{}{}", link, src_value)
+                match (src_value.starts_with("/"), link.ends_with("/")) {
+                    (true, true) => format!("{}{}", link, &src_value[1..]),
+                    (true, false) | (false, true) => format!("{}{}", link, src_value),
+                    (false, false) => format!("{}/{}", link, src_value),
                 }
             };
 
@@ -120,7 +119,7 @@ impl HtmlProcessor for HtmlProcessorImpl {
                 }
             };
 
-            let corrected_tag = full_tag.replace(src_value, &format!("/{}", image_path));
+            let corrected_tag = full_tag.replace(src_value, image_path);
 
             // Append the corrected <img> tag
             fixed_html.push_str(&corrected_tag);

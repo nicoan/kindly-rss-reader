@@ -7,27 +7,31 @@ use crate::{
     state::AppState,
 };
 
+pub const STATIC_DIR: &str = "/static";
+pub const ARTICLES_DIR: &str = "/articles";
+
 pub fn build<S: AppState>(state: S, config: &Config) -> Router {
     let static_data_path = std::path::absolute(format!("{}/static/", config.static_data_path))
         .expect("invalid static data path")
         .into_os_string()
         .into_string()
         .expect("invalid static data path");
-    let articles_path = std::path::absolute(format!("{}/articles/", config.static_data_path))
+    let articles_path = std::path::absolute(format!("{}/articles/", config.data_path))
         .expect("invalid articles path")
         .into_os_string()
         .into_string()
         .expect("invalid articles path");
 
+    let not_found = format!("{static_data_path}/not_found.html");
+
     Router::new()
         .nest_service(
-            "/static",
-            ServeDir::new(static_data_path)
-                .not_found_service(ServeFile::new("static/not_found.html")),
+            STATIC_DIR,
+            ServeDir::new(&static_data_path).not_found_service(ServeFile::new(&not_found)),
         )
         .nest_service(
-            "/articles",
-            ServeDir::new(articles_path).not_found_service(ServeFile::new("static/not_found.html")),
+            ARTICLES_DIR,
+            ServeDir::new(articles_path).not_found_service(ServeFile::new(&not_found)),
         )
         .route(
             "/feed/add",

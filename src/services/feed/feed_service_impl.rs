@@ -30,6 +30,7 @@ where
     feed_repository: Arc<FR>,
     html_processor: Arc<HP>,
     config: Arc<Config>,
+    articles_router_path: &'static str,
 }
 
 impl<FR, HP> FeedServiceImpl<FR, HP>
@@ -37,11 +38,17 @@ where
     FR: FeedRepository,
     HP: HtmlProcessor + 'static,
 {
-    pub fn new(feed_repository: Arc<FR>, html_processor: Arc<HP>, config: Arc<Config>) -> Self {
+    pub fn new(
+        feed_repository: Arc<FR>,
+        html_processor: Arc<HP>,
+        config: Arc<Config>,
+        articles_router_path: &'static str,
+    ) -> Self {
         Self {
             feed_repository,
             html_processor,
             config,
+            articles_router_path,
         }
     }
 
@@ -158,8 +165,9 @@ where
 
                 let mut join_set: JoinSet<Result<Article>> = JoinSet::new();
                 let feed_link = Arc::new(feed.link.clone());
+                let router_path = format!("{}/{feed_id}", self.articles_router_path);
                 let file_path = format!("{}/articles/{feed_id}", self.config.data_path);
-                let image_processor = Arc::new(ImageProcessorFsImpl::new(file_path));
+                let image_processor = Arc::new(ImageProcessorFsImpl::new(router_path, file_path));
 
                 // Create the articles from the channel items
                 for article in channel_items {

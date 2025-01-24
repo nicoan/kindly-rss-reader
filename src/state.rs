@@ -1,5 +1,6 @@
 use crate::{
-    config::Config, providers::html_processor::HtmlProcessorImpl, services::templates::TEMPLATES,
+    config::Config, providers::html_processor::HtmlProcessorImpl, router::ARTICLES_DIR,
+    services::templates::TEMPLATES,
 };
 use std::sync::Arc;
 
@@ -52,7 +53,12 @@ impl State {
 
         Self {
             template_service,
-            feed_service: FeedServiceImpl::new(feed_repository, html_processor_provider, config),
+            feed_service: FeedServiceImpl::new(
+                feed_repository,
+                html_processor_provider,
+                config,
+                ARTICLES_DIR,
+            ),
         }
     }
 }

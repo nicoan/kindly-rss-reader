@@ -12,15 +12,19 @@ pub struct ImageProcessorFsImpl<P>
 where
     P: AsRef<Path> + Sync + Send,
 {
-    article_path: P,
+    article_router_path: P,
+    article_fs_path: P,
 }
 
 impl<P> ImageProcessorFsImpl<P>
 where
     P: AsRef<Path> + Sync + Send,
 {
-    pub fn new(article_path: P) -> Self {
-        Self { article_path }
+    pub fn new(article_router_path: P, article_fs_path: P) -> Self {
+        Self {
+            article_router_path,
+            article_fs_path,
+        }
     }
 }
 
@@ -30,7 +34,7 @@ where
     P: AsRef<Path> + Sync + Send,
 {
     async fn process_image_url(&self, url: &str) -> Result<String> {
-        let mut image_path = self.article_path.as_ref().join("static/");
+        let mut image_path = self.article_fs_path.as_ref().join("static/");
         fs::create_dir_all(&image_path)
             .await
             .map_err(|e| ImageProcessorError::UnableToProcess(e.into()))?;
@@ -42,7 +46,8 @@ where
             .await
             .map_err(|e| ImageProcessorError::UnableToProcess(e.into()))?;
 
-        image_path.push(Uuid::new_v4().to_string());
+        let image_file_name = Uuid::new_v4().to_string();
+        image_path.push(&image_file_name);
 
         // Create the file and write the content
         let mut file = fs::File::create(&image_path)
@@ -53,9 +58,10 @@ where
             .await
             .map_err(|e| ImageProcessorError::UnableToProcess(e.into()))?;
 
-        image_path
+        self.article_router_path
+            .as_ref()
             .to_str()
-            .map(|p| p.to_owned())
+            .map(|p| format!("{p}/static/{image_file_name}",))
             .ok_or(ImageProcessorError::UnableToProcess(anyhow::anyhow!({
                 "unable to convert the path {image_path:?} to string"
             })))

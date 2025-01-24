@@ -7,7 +7,6 @@ use sqlite::ConnectionThreadSafe;
 use crate::config::Config;
 
 pub fn init_database(config: &Config) -> ConnectionThreadSafe {
-    println!("{}", config.data_path);
     let connection: ConnectionThreadSafe =
         sqlite::Connection::open_thread_safe(format!("{}/database.db", config.data_path))
             .expect("there was an error opening a connection to the database");
