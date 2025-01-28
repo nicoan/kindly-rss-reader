@@ -3,12 +3,13 @@ use std::str::FromStr;
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlite::Row;
+use uuid::Uuid;
 
 use crate::repositories::RepositoryError;
 
 #[derive(Serialize)]
 pub struct Feed {
-    pub id: String,
+    pub id: Uuid,
     pub title: String,
     pub url: String,
     pub link: String,
@@ -20,8 +21,11 @@ impl TryFrom<Row> for Feed {
     type Error = RepositoryError;
 
     fn try_from(row: Row) -> Result<Self, Self::Error> {
+        let id = Uuid::from_str(row.read::<&str, _>("id"))
+            .map_err(|e| RepositoryError::Deserialization(e.into()))?;
+
         Ok(Feed {
-            id: row.read::<&str, _>("id").into(),
+            id,
             title: row.read::<&str, _>("title").into(),
             url: row.read::<&str, _>("url").into(),
             link: row.read::<&str, _>("link").into(),

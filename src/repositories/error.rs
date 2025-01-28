@@ -4,11 +4,11 @@ pub enum RepositoryError {
     Deserialization(#[source] anyhow::Error),
 
     #[error("unexpected error: {0:?}")]
-    Unexpcted(#[from] anyhow::Error),
+    Unexpected(#[from] anyhow::Error),
 }
 
 impl From<sqlite::Error> for RepositoryError {
     fn from(value: sqlite::Error) -> Self {
-        RepositoryError::Unexpcted(value.into())
+        RepositoryError::Unexpected(value.into())
     }
 }

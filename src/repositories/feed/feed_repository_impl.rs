@@ -6,7 +6,6 @@ use axum::async_trait;
 use chrono::{DateTime, Utc};
 use sqlite::ConnectionThreadSafe;
 use std::sync::Arc;
-use tokio::fs;
 use uuid::Uuid;
 
 use super::FeedRepository;
@@ -39,7 +38,7 @@ impl FeedRepository for FeedRepositoryImpl {
             .bind((1, feed_id.to_string().as_str()))?
             .nth(0)
             .map(|r| {
-                r.map_err(|e| RepositoryError::Unexpcted(e.into()))
+                r.map_err(|e| RepositoryError::Unexpected(e.into()))
                     .and_then(Feed::try_from)
             })
             .transpose()
@@ -53,7 +52,7 @@ impl FeedRepository for FeedRepositoryImpl {
                     VALUES (?, ?, ?, ?, ?);
                 "#,
         )?;
-        stmt.bind((1, feed.id.as_str()))?;
+        stmt.bind((1, feed.id.to_string().as_str()))?;
         stmt.bind((2, feed.title.as_str()))?;
         stmt.bind((3, feed.url.as_str()))?;
         stmt.bind((4, feed.link.as_str()))?;
@@ -85,7 +84,7 @@ impl FeedRepository for FeedRepositoryImpl {
             .bind((2, feed_id.to_string().as_str()))?
             .nth(0)
             .map(|r| {
-                r.map_err(|e| RepositoryError::Unexpcted(e.into()))
+                r.map_err(|e| RepositoryError::Unexpected(e.into()))
                     .and_then(Article::try_from)
             })
             .transpose()
@@ -94,7 +93,7 @@ impl FeedRepository for FeedRepositoryImpl {
     async fn add_articles(
         &self,
         feed_id: Uuid,
-        articles: &[Article],
+        articles: &[&Article],
     ) -> Result<(), RepositoryError> {
         let feed_id = feed_id.to_string();
 
@@ -136,35 +135,6 @@ impl FeedRepository for FeedRepositoryImpl {
         self.connection.execute("COMMIT")?;
 
         Ok(())
-    }
-
-    async fn get_article_content(
-        &self,
-        feed_id: Uuid,
-        article_id: Uuid,
-    ) -> Result<Option<String>, RepositoryError> {
-        let file_path = self
-            .connection
-            .prepare("SELECT content FROM article WHERE id = ? AND feed_id = ?")?
-            .into_iter()
-            .bind((1, article_id.to_string().as_str()))?
-            .bind((2, feed_id.to_string().as_str()))?
-            .nth(0)
-            .map(|r| {
-                r.map_err(|e| RepositoryError::Unexpcted(e.into()))
-                    .map(|row| row.read::<&str, _>("content").to_owned())
-            })
-            .transpose()?;
-
-        if let Some(path) = file_path {
-            Ok(Some(
-                fs::read_to_string(path)
-                    .await
-                    .map_err(|e| RepositoryError::Unexpcted(e.into()))?,
-            ))
-        } else {
-            Ok(None)
-        }
     }
 
     async fn update_last_updated(

@@ -35,7 +35,6 @@ async fn main() {
         .await
         .expect("unable to bind tcp listener");
 
-    axum::serve(listener, app).await.unwrap();
-
     config.print_information();
+    axum::serve(listener, app).await.unwrap();
 }

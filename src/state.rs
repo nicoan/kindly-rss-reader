@@ -1,5 +1,6 @@
 use crate::{
-    config::Config, providers::html_processor::HtmlProcessorImpl, router::ARTICLES_DIR,
+    config::Config, providers::html_processor::HtmlProcessorImpl,
+    repositories::feed_content::FeedContentFsRepositoryImpl, router::ARTICLES_DIR,
     services::templates::TEMPLATES,
 };
 use std::sync::Arc;
@@ -17,7 +18,8 @@ use crate::{
 #[derive(Clone)]
 pub struct State {
     pub template_service: TemplateServiceImpl<'static>,
-    pub feed_service: FeedServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>,
+    pub feed_service:
+        FeedServiceImpl<FeedRepositoryImpl, FeedContentFsRepositoryImpl, HtmlProcessorImpl>,
 }
 
 pub trait AppState: Sync + Send + Clone + 'static {
@@ -37,7 +39,9 @@ impl State {
         let connection = Arc::new(connection);
 
         // Initialize repositories
-        let feed_repository = Arc::new(FeedRepositoryImpl::new(connection));
+        let feed_repository = Arc::new(FeedRepositoryImpl::new(connection.clone()));
+        let feed_content_repository =
+            Arc::new(FeedContentFsRepositoryImpl::new(connection, config.clone()));
 
         // Initialize providers
         let html_processor_provider =
@@ -55,6 +59,7 @@ impl State {
             template_service,
             feed_service: FeedServiceImpl::new(
                 feed_repository,
+                feed_content_repository,
                 html_processor_provider,
                 config,
                 ARTICLES_DIR,
@@ -65,7 +70,7 @@ impl State {
 
 impl AppState for State {
     type TS = TemplateServiceImpl<'static>;
-    type FS = FeedServiceImpl<FeedRepositoryImpl, HtmlProcessorImpl>;
+    type FS = FeedServiceImpl<FeedRepositoryImpl, FeedContentFsRepositoryImpl, HtmlProcessorImpl>;
 
     fn template_service(&self) -> &Self::TS {
         &self.template_service
