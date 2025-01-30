@@ -184,7 +184,6 @@ where
                     .title
                     .clone()
                     .unwrap_or_else(|| "Unknown title".to_owned()),
-                author: article.author.clone().unwrap_or_else(|| "".to_owned()),
                 link: article_link,
                 guid: article.guid().map(|id| id.value.clone()).ok_or_else(|| {
                     FeedServiceError::Unexpected(anyhow::anyhow!(
@@ -192,6 +191,7 @@ where
                         feed_id
                     ))
                 })?,
+                author: article.author,
                 html_parsed,
                 content: None,
                 read: false,
@@ -444,5 +444,12 @@ where
                 article_id, feed_id,
             ))
         }
+    }
+
+    async fn mark_article_as_read(&self, feed_id: Uuid, article_id: Uuid) -> Result<()> {
+        Ok(self
+            .feed_repository
+            .mark_article_as_read(feed_id, article_id)
+            .await?)
     }
 }

@@ -109,7 +109,7 @@ impl FeedRepository for FeedRepositoryImpl {
             stmt.bind((":id", article.id.to_string().as_str()))?;
             stmt.bind((":feed_id", feed_id.as_str()))?;
             stmt.bind((":title", article.title.as_str()))?;
-            stmt.bind((":author", article.author.as_str()))?;
+            stmt.bind((":author", article.author.as_deref().unwrap_or("NULL")))?;
             stmt.bind((":guid", article.guid.as_str()))?;
             stmt.bind((":link", article.link.as_str()))?;
             stmt.bind((":last_updated", article.last_updated.to_rfc3339().as_str()))?;
@@ -148,6 +148,27 @@ impl FeedRepository for FeedRepositoryImpl {
             .prepare("UPDATE feed SET last_updated = ? WHERE id = ?")?;
         stmt.bind((1, date.to_rfc3339().as_str()))?;
         stmt.bind((2, feed_id.to_string().as_str()))?;
+
+        // execute the statement
+        stmt.next()?;
+        stmt.reset()?;
+        drop(stmt);
+        self.connection.execute("COMMIT")?;
+
+        Ok(())
+    }
+
+    async fn mark_article_as_read(
+        &self,
+        feed_id: Uuid,
+        article_id: Uuid,
+    ) -> Result<(), RepositoryError> {
+        self.connection.execute("BEGIN")?;
+        let mut stmt = self
+            .connection
+            .prepare("UPDATE article SET read = 1 WHERE feed_id = ? and id = ?")?;
+        stmt.bind((1, feed_id.to_string().as_str()))?;
+        stmt.bind((2, article_id.to_string().as_str()))?;
 
         // execute the statement
         stmt.next()?;

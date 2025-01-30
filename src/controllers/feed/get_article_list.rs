@@ -2,6 +2,7 @@ use crate::controllers::{ApiError, HtmlResponse};
 use crate::services::feed::FeedService;
 use crate::services::templates::{TemplateService, TEMPLATE_NAME_ARTICLE_LIST};
 use crate::state::AppState;
+use crate::view_models::article_list_item::ArticleListItem;
 use axum::extract::Path;
 use axum::extract::State;
 use minijinja::context;
@@ -15,6 +16,7 @@ where
     S: AppState,
 {
     let (feed, articles) = state.feed_service().get_channel(feed_id).await?;
+    let articles: Vec<ArticleListItem> = articles.into_iter().map(ArticleListItem::from).collect();
 
     let rendered_html = state
         .template_service()

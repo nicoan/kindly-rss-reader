@@ -31,5 +31,12 @@ where
         )
         .await?;
 
+    if !article_data.read {
+        state
+            .feed_service()
+            .mark_article_as_read(feed_id, article_id)
+            .await?;
+    }
+
     Ok(HtmlResponse::new(rendered_article))
 }

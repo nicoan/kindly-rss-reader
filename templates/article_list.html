@@ -12,10 +12,13 @@
                 <div id="body" class="list">
                     {% for item in context.articles %}
                     <a href="/feed/{{context.feed.id}}/article/{{item.id}}">
-                        <h2> {{ item.title }} </h2>
+                        <div style="display: flex; justify-content: space-between; padding: 0 5px;">
+                            <h2> {{ item.title }} </h2>
+                            {% if not item.read %} <div> <span class="badge-new">Unread</span> </div>{% endif %}
+                        </div>
                         <div style="display: flex; justify-content: space-between; padding: 0 5px;">
                             <sub> {{ item.author }} </sub>
-                            <sub> {{ item.last_updated }} </sub>
+                            <sub> {{ item.date }} </sub>
                         </div>
                         <hr/>
                     </a>

@@ -7,6 +7,7 @@ mod router;
 pub mod services;
 mod state;
 mod tracing;
+mod view_models;
 
 use crate::repositories::init_database;
 use crate::tracing::init_tracing;

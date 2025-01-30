@@ -32,21 +32,17 @@ impl FeedContentRepository for FeedContentFsRepositoryImpl {
             .nth(0)
             .map(|r| {
                 r.map_err(|e| RepositoryError::Unexpected(e.into()))
-                    .map(|row| row.read::<&str, _>("content").to_owned())
+                    .map(|row| row.read::<Option<&str>, _>("content").map(|p| p.to_owned()))
             })
-            .transpose()?;
+            .transpose()?
+            .flatten();
 
-        // TODO: Create some function that translate the string NULL to None when reading a row...
         if let Some(path) = file_path {
-            if path == "NULL" {
-                Ok(None)
-            } else {
-                Ok(Some(
-                    fs::read_to_string(path)
-                        .await
-                        .map_err(|e| RepositoryError::Unexpected(e.into()))?,
-                ))
-            }
+            Ok(Some(
+                fs::read_to_string(path)
+                    .await
+                    .map_err(|e| RepositoryError::Unexpected(e.into()))?,
+            ))
         } else {
             Ok(None)
         }
