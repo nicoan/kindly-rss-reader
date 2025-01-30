@@ -36,5 +36,9 @@ pub const TEMPLATES: [(&str, &str); 6] = [
 pub(crate) trait TemplateService<'a>: Sync + Send {
     fn register_template(&mut self, name: &'a str, path: impl AsRef<Path>) -> Result<()>;
 
-    fn render_template(&self, name: &str, context: impl Serialize) -> Result<String>;
+    async fn render_template(
+        &self,
+        name: &str,
+        context: impl Serialize + Sync + Send,
+    ) -> Result<String>;
 }

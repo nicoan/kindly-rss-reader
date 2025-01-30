@@ -6,12 +6,12 @@
         <main class="main">
             <div class="content">
                 <div id="header">
-                    <h1> {{ feed.title }} </h1>
+                    <h1> {{ context.feed.title }} </h1>
                     <hr/>
                 </div>
                 <div id="body" class="list">
-                    {% for item in articles %}
-                    <a href="/feed/{{feed.id}}/article/{{item.id}}">
+                    {% for item in context.articles %}
+                    <a href="/feed/{{context.feed.id}}/article/{{item.id}}">
                         <h2> {{ item.title }} </h2>
                         <div style="display: flex; justify-content: space-between; padding: 0 5px;">
                             <sub> {{ item.author }} </sub>

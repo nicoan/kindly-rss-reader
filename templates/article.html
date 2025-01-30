@@ -6,15 +6,15 @@
         <main class="main">
             <div class="content">
                 <div id="header">
-                    <h1> {{ feed.title }} </h1>
+                    <h1> {{ context.feed.title }} </h1>
                     <hr/>
                 </div>
                 <div id="body" class="body">
-                    {% if not article_data.html_parsed %}
-                    <h1> {{ article_data.title }} </h1>
+                    {% if not context.article_data.html_parsed %}
+                    <h1> {{ context.article_data.title }} </h1>
                     {% endif %}
 
-                    {{ article }}
+                    {{ context.article }}
                 </div>
             </div>
             {% include "toolbar" %}

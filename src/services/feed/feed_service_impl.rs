@@ -22,7 +22,6 @@ use uuid::Uuid;
 
 type ArticleContent = String;
 
-#[derive(Clone)]
 pub struct FeedServiceImpl<FR, FCR, HP>
 where
     FR: FeedRepository,
@@ -93,9 +92,9 @@ where
             .await
             .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
 
-        Ok(html_processor
+        html_processor
             .sanitize(&content)
-            .map_err(|e| FeedServiceError::Unexpected(e.into()))?)
+            .map_err(|e| FeedServiceError::Unexpected(e.into()))
     }
 
     async fn process_rss_content(
@@ -106,13 +105,13 @@ where
     ) -> Result<String> {
         // Fix img src in contents
         let content = html_processor
-            .fix_img_src(&content, &feed_link, &*image_processor)
+            .fix_img_src(content, &feed_link, &*image_processor)
             .await
             .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
 
-        Ok(html_processor
+        html_processor
             .sanitize(&content)
-            .map_err(|e| FeedServiceError::Unexpected(e.into()))?)
+            .map_err(|e| FeedServiceError::Unexpected(e.into()))
     }
 
     /// This function process an RSS and adds it to the feed's article list.

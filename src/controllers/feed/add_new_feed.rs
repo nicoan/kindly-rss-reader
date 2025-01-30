@@ -1,3 +1,4 @@
+use crate::controllers::ApiError;
 use crate::services::feed::FeedService;
 use crate::state::AppState;
 use axum::extract::State;
@@ -5,8 +6,6 @@ use axum::response::Redirect;
 use axum::Form;
 use reqwest::Url;
 use serde::Deserialize;
-
-use super::ApiError;
 
 #[derive(Deserialize, Debug)]
 pub struct FeedAddForm {

@@ -1,6 +1,11 @@
 <div id="toolbar" class="toolbar">
-    <i id="backButton" class="fa fa-angle-double-left button" onclick="back()" aria-hidden="true"></i>
-    <i id="toggleThemeButton" class="fa fa-moon-o button" onclick="toggleTheme()" aria-hidden="true"></i>
+    <i id="backButton" class="fa fa-angle-double-left button" onclick="back(); return false;" aria-hidden="true"></i>
+    <i
+        id="toggleThemeButton"
+        class="fa {% if config.dark_theme %} fa-moon-o {% else %} fa-sun-o {% endif %} button"
+        onclick="toggleTheme()"
+        aria-hidden="true">
+    </i>
     <i id="zoomInButton" class="fa fa-search-plus button" onclick="zoomIn()" aria-hidden="true"></i>
     <i id="zoomOutButton" class="fa fa-search-minus button" onclick="zoomOut()" aria-hidden="true"></i>
     <div id="middle-space-toolbar"></div>

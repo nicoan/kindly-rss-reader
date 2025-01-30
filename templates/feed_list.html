@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <div id="body" class="list">
-                    {% for feed in feeds %}
+                    {% for feed in context.feeds %}
                     <a href="feed/{{ feed.id }}">
                         <h3> {{ feed.title }} </h3>
                         <hr/>
