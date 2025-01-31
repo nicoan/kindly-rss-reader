@@ -9,6 +9,7 @@ use crate::{
     controllers::{
         config::{set_dark_theme, set_zoom},
         feed::{add_new_feed, add_new_feed_form, get_article, get_article_list, get_feed_list},
+        not_found::not_found,
     },
     state::AppState,
 };
@@ -28,17 +29,9 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
         .into_string()
         .expect("invalid articles path");
 
-    let not_found = format!("{static_data_path}/not_found.html");
-
     Router::new()
-        .nest_service(
-            STATIC_DIR,
-            ServeDir::new(&static_data_path).not_found_service(ServeFile::new(&not_found)),
-        )
-        .nest_service(
-            ARTICLES_DIR,
-            ServeDir::new(articles_path).not_found_service(ServeFile::new(&not_found)),
-        )
+        .nest_service(STATIC_DIR, ServeDir::new(&static_data_path))
+        .nest_service(ARTICLES_DIR, ServeDir::new(articles_path))
         .route(
             "/feed/add",
             get(add_new_feed_form::<S>).post(add_new_feed::<S>),
@@ -48,5 +41,6 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
         .route("/config/dark_theme", post(set_dark_theme::<S>))
         .route("/config/zoom", post(set_zoom::<S>))
         .route("/", get(get_feed_list::<S>))
+        .fallback(not_found::<S>)
         .with_state(state)
 }

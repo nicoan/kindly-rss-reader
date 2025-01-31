@@ -89,6 +89,14 @@
             toggleThemeButton.classList.add("fa-moon-o");
         }
 
+        document.querySelectorAll("img.alternate").forEach(function (node) {
+            if (node.style.display === "none") {
+                node.style.display = "";
+            } else {
+                node.style.display = "none";
+            }
+        });
+
         darkTheme = !darkTheme;
 
         fetch("/config/dark_theme", {

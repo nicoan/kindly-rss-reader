@@ -6,6 +6,8 @@
         <main class="main">
             <div class="content">
                 <div id="header" class="section-header">
+                    <img src="/static/images/logo.webp" height="45px" class="alternate" {% if not config.dark_theme %} style="display: none;" {% endif %} />
+                    <img src="/static/images/logo_dark.webp" height="45px" class="alternate" {% if config.dark_theme %} style="display: none;" {% endif %} />
                     <h1> Feed list </h1>
                     <div class="section-header-buttons">
                         <a href="/feed/add">

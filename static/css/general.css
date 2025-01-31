@@ -120,3 +120,8 @@ sub {
   border-radius: 4px;
   margin: 10px;
 }
+
+.not-found {
+  text-align: center;
+  padding: 40px;
+}

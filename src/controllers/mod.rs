@@ -1,5 +1,6 @@
 pub mod config;
 pub mod feed;
+pub mod not_found;
 
 use axum::response::{Html, IntoResponse};
 use reqwest::{header, StatusCode};
