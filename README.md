@@ -13,7 +13,7 @@ Feel free to test it and/or collaborating creating issues or creating a PR with 
 To run the project, you just need to write
 
 ```bash
-DATA_PATH=. STATIC_DATA_PATH=. cargo run
+MAX_ARTICLES_QTY_TO_DOWNLOAD=0 DATA_PATH=. STATIC_DATA_PATH=. cargo run
 ```
 
 ## Docker

@@ -36,8 +36,6 @@ impl FeedContentRepository for FeedContentFsRepositoryImpl {
             .transpose()?
             .flatten();
 
-        println!("{file_path:?}");
-
         if let Some(path) = file_path {
             Ok(Some(
                 fs::read_to_string(path)

@@ -16,6 +16,7 @@ where
     S: AppState,
 {
     let (feed, articles) = state.feed_service().get_channel(feed_id).await?;
+
     let articles: Vec<ArticleListItem> = articles.into_iter().map(ArticleListItem::from).collect();
 
     let rendered_html = state

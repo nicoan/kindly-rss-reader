@@ -21,9 +21,11 @@ COPY --from=builder /home/target/release/kindle-rss-reader /usr/local/bin/kindly
 COPY --from=builder /home/templates/ /usr/share/kindlyrss/templates/
 COPY --from=builder /home/migrations/ /usr/share/kindlyrss/migrations/
 COPY --from=builder /home/static/ /usr/share/kindlyrss/static/
+COPY --from=builder /home/config/config.json /var/lib/kindlyrss/config.json
 
 RUN ls /usr/local/bin
 
 ENV RUST_LOG=info
+ENV MAX_ARTICLES_QTY_TO_DOWNLOAD=0
 
 CMD ["kindlyrss"]

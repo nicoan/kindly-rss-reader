@@ -109,12 +109,12 @@ impl FeedRepository for FeedRepositoryImpl {
             stmt.bind((":id", article.id.to_string().as_str()))?;
             stmt.bind((":feed_id", feed_id.as_str()))?;
             stmt.bind((":title", article.title.as_str()))?;
-            stmt.bind((":author", article.author.as_deref().unwrap_or("NULL")))?;
+            stmt.bind((":author", article.author.as_deref()))?;
             stmt.bind((":guid", article.guid.as_str()))?;
             stmt.bind((":link", article.link.as_str()))?;
             stmt.bind((":last_updated", article.last_updated.to_rfc3339().as_str()))?;
             stmt.bind((":html_parsed", if article.html_parsed { 1 } else { 0 }))?;
-            stmt.bind((":content", article.content.as_deref().unwrap_or("NULL")))?;
+            stmt.bind((":content", article.content.as_deref()))?;
 
             // Execute the statement
             stmt.next()?;
