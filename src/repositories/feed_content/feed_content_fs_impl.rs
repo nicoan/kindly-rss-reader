@@ -8,7 +8,6 @@ use uuid::Uuid;
 
 use super::{FeedContentRepository, Result};
 
-#[derive(Clone)]
 pub struct FeedContentFsRepositoryImpl {
     connection: Arc<ConnectionThreadSafe>,
     config: Arc<Config>,
@@ -36,6 +35,8 @@ impl FeedContentRepository for FeedContentFsRepositoryImpl {
             })
             .transpose()?
             .flatten();
+
+        println!("{file_path:?}");
 
         if let Some(path) = file_path {
             Ok(Some(

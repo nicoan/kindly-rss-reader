@@ -63,6 +63,7 @@ button:focus {
     display: flex;
     align-items: center;
     border-bottom: 1px #666 solid;
+    padding: 5px 15px;
 }
 
 .section-header-buttons {

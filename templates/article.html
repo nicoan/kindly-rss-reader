@@ -5,14 +5,14 @@
     <body>
         <main class="main">
             <div class="content">
-                <div id="header">
+                <div id="header" class="section-header">
                     <h1> {{ context.feed.title }} </h1>
-                    <hr/>
                 </div>
                 <div id="body" class="body">
                     {% if not context.article_data.html_parsed %}
                     <h1> {{ context.article_data.title }} </h1>
                     {% endif %}
+
 
                     {{ context.article }}
                 </div>

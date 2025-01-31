@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::repositories::RepositoryError;
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug)]
 pub struct Article {
     pub id: Uuid,
     pub feed_id: Uuid,
@@ -40,7 +40,7 @@ impl TryFrom<Row> for Article {
             guid: row.read::<&str, _>("guid").into(),
             content: row.read::<Option<&str>, _>("content").map(|s| s.to_owned()),
             read: row.read::<i64, _>("read") != 0,
-            html_parsed: row.read::<i64, _>("read") != 0,
+            html_parsed: row.read::<i64, _>("html_parsed") != 0,
             last_updated: DateTime::from_str(row.read::<&str, _>("last_updated"))
                 .map_err(|e: chrono::ParseError| RepositoryError::Deserialization(e.into()))?,
         })
