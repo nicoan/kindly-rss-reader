@@ -1,6 +1,7 @@
+use reqwest::StatusCode;
 use uuid::Uuid;
 
-use crate::repositories::RepositoryError;
+use crate::{controllers::ApiError, repositories::RepositoryError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum FeedServiceError {
@@ -24,4 +25,25 @@ pub enum FeedServiceError {
 
     #[error("unexpected error ocurred: {0:?}")]
     Unexpected(#[source] anyhow::Error),
+}
+
+impl From<FeedServiceError> for ApiError {
+    fn from(error: FeedServiceError) -> Self {
+        match error {
+            e @ FeedServiceError::ArticleContentNotFound(_, _) => Self {
+                original_error: e.into(),
+                status_code: StatusCode::NOT_FOUND,
+            },
+
+            e @ FeedServiceError::FeedNotFound(_) => Self {
+                original_error: e.into(),
+                status_code: StatusCode::NOT_FOUND,
+            },
+
+            e => Self {
+                original_error: e.into(),
+                status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            },
+        }
+    }
 }

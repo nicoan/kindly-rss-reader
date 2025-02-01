@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.95"
-axum = "0.7.5"
+axum = { version = "0.7.5", features = ["macros"] }
 axum_static = "1.7.1"
 chrono = { version = "0.4.39", features = ["serde"] }
 envy = "0.4.2"

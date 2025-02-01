@@ -1,5 +1,6 @@
 mod config;
 mod controllers;
+mod middlewares;
 mod models;
 pub mod providers;
 mod repositories;

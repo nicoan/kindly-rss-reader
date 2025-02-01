@@ -4,11 +4,11 @@
     </head>
     <body class="not-found">
         {% if config.dark_theme %}
-            <img src="/static/images/not_found.webp" height="300px" />
+            <img src="{{ context.error.error_image_path }}" height="300px" />
         {% else %}
-            <img src="/static/images/not_found_dark.webp" height="300px" />
+            <img src="{{ context.error.error_image_path_dark }}" height="300px" />
         {% endif %}
-        <h1> Page not found </h1>
+        <h1> {{ context.error.message }} </h1>
         <h2><a href="/"> Go back home </a></h2>
     <body>
 </html>

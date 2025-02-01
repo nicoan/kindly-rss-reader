@@ -2,7 +2,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use tower_http::services::{ServeDir, ServeFile};
+use tower_http::services::ServeDir;
 
 use crate::{
     config::Config,
@@ -11,6 +11,7 @@ use crate::{
         feed::{add_new_feed, add_new_feed_form, get_article, get_article_list, get_feed_list},
         not_found::not_found,
     },
+    middlewares::error_handling_middleware::ErrorHandlingLayer,
     state::AppState,
 };
 
@@ -41,6 +42,7 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
         .route("/config/dark_theme", post(set_dark_theme::<S>))
         .route("/config/zoom", post(set_zoom::<S>))
         .route("/", get(get_feed_list::<S>))
+        .layer(ErrorHandlingLayer::new(state.clone()))
         .fallback(not_found::<S>)
         .with_state(state)
 }
