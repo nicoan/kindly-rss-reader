@@ -1,4 +1,4 @@
 /target
 database.db
 /articles
-**/.DS_store/**
+.DS_store
