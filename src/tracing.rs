@@ -1,7 +1,7 @@
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-const DEFAULT_LOG_LEVEL: &str = "DEBUG";
+const DEFAULT_LOG_LEVEL: &str = "INFO";
 
 pub fn init_tracing() {
     tracing_subscriber::registry()

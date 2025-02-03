@@ -45,11 +45,11 @@ impl Config {
     }
 
     fn default_data_path() -> String {
-        "/var/lib/kindlyrss".to_owned()
+        ".".to_owned()
     }
 
     fn default_static_data_path() -> String {
-        "/usr/share/kindlyrss".to_owned()
+        ".".to_owned()
     }
 
     fn default_port() -> u16 {
