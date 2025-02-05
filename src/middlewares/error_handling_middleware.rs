@@ -92,7 +92,6 @@ where
             match inner.call(req).await {
                 Ok(response) => match response.status().as_u16() {
                     s if (500..=599).contains(&s) => {
-                        tracing::error!("an unexpected error ocurred: {response:?}");
                         let error = Error::internal_error();
                         Ok(get_error(error, state).await.into_response())
                     }
