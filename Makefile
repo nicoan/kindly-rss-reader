@@ -8,4 +8,9 @@ docker-push:
 	docker push nicoan/kindly-rss-reader:latest
 	docker push nicoan/kindly-rss-reader:$(PACKAGE_VERSION)
 
-.PHONY: build-docker push-docker
+
+git-tag-and-push:
+	git tag v$(PACKAGE_VERSION)
+	git push origin v$(PACKAGE_VERSION)
+
+.PHONY: build-docker push-docker git-tag-and-push
