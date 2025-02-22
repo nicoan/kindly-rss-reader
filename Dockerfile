@@ -7,9 +7,6 @@ RUN apk add --no-cache musl-dev
 COPY . ./
 RUN cargo build --release
 
-RUN ls /home/target/release
-RUN pwd
-
 FROM alpine:3.21 AS run
 
 RUN mkdir -p /home/kindlyrss/static_data \

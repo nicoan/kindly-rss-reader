@@ -1,0 +1,38 @@
+FROM rust:1.84-bullseye AS builder
+
+WORKDIR /home
+
+RUN git clone https://github.com/richfelker/musl-cross-make.git \
+    && cd musl-cross-make \
+    && echo 'TARGET = armv7-linux-musleabihf' > config.mak \
+    && echo 'OUTPUT = /build/cross-arm' >> config.mak \
+    && make \
+    && make install
+
+ENV PATH=$PATH:/build/cross-arm/bin
+ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=armv7-linux-musleabihf-gcc
+
+RUN rustup target add armv7-unknown-linux-musleabihf
+COPY . ./
+
+RUN cargo build --target armv7-unknown-linux-musleabihf --release
+
+FROM arm32v7/alpine:3 AS run
+
+RUN mkdir -p /home/kindlyrss/static_data \
+    && mkdir -p /home/kindlyrss/data
+
+EXPOSE 3000/tcp
+
+COPY --from=builder /home/target/armv7-unknown-linux-musleabihf/release/kindle-rss-reader /usr/local/bin/kindlyrss
+COPY --from=builder /home/templates/ /home/kindlyrss/static_data/templates/
+COPY --from=builder /home/migrations/ /home/kindlyrss/static_data/migrations/
+COPY --from=builder /home/static/ /home/kindlyrss/static_data/static/
+COPY --from=builder /home/config/config.json /home/kindlyrss/data/config.json
+
+ENV RUST_LOG=info
+ENV MAX_ARTICLES_QTY_TO_DOWNLOAD=0
+ENV STATIC_DATA_PATH=/home/kindlyrss/static_data
+ENV DATA_PATH=/home/kindlyrss/data
+
+CMD ["kindlyrss"]
