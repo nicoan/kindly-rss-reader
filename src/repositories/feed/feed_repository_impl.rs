@@ -26,7 +26,11 @@ impl FeedRepositoryImpl {
 impl FeedRepository for FeedRepositoryImpl {
     async fn get_feed_list(&self) -> Result<Vec<Feed>, RepositoryError> {
         self.connection
-            .prepare("SELECT * FROM feed;")?
+            .prepare(
+                "SELECT f.*, 
+                (SELECT COUNT(*) FROM article a WHERE a.feed_id = f.id AND a.read = 0) as unread_count 
+                FROM feed f;"
+            )?
             .into_iter()
             .flat_map(|r| r.map(Feed::try_from))
             .collect()
@@ -34,7 +38,11 @@ impl FeedRepository for FeedRepositoryImpl {
 
     async fn get_feed(&self, feed_id: Uuid) -> Result<Option<Feed>, RepositoryError> {
         self.connection
-            .prepare("SELECT * FROM feed WHERE id = ?;")?
+            .prepare(
+                "SELECT f.*, 
+                (SELECT COUNT(*) FROM article a WHERE a.feed_id = f.id AND a.read = 0) as unread_count 
+                FROM feed f WHERE f.id = ?;"
+            )?
             .into_iter()
             .bind((1, feed_id.to_string().as_str()))?
             .nth(0)

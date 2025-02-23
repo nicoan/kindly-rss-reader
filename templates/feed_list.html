@@ -22,7 +22,12 @@
                 <div id="body" class="list">
                     {% for feed in context.feeds %}
                     <a href="feed/{{ feed.id }}">
-                        <h3> {{ feed.title }} </h3>
+                        <h3> 
+                            {{ feed.title }} 
+                            {% if feed.unread_count > 0 %}
+                            <span class="unread-count">{{ feed.unread_count }}</span>
+                            {% endif %}
+                        </h3>
                         <hr/>
                     </a>
                     {% endfor %}
