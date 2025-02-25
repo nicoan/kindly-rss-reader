@@ -10,14 +10,14 @@ COPY . ./
 
 RUN cargo build --target aarch64-unknown-linux-musl --release
 
-FROM arm64v8/alpine:3 AS run
+FROM alpine:3 AS run
 
 RUN mkdir -p /home/kindlyrss/static_data \
     && mkdir -p /home/kindlyrss/data
 
 EXPOSE 3000/tcp
 
-COPY --from=builder /home/target/armv7-unknown-linux-musleabihf/release/kindle-rss-reader /usr/local/bin/kindlyrss
+COPY --from=builder /home/target/aarch64-unknown-linux-musl/release/kindle-rss-reader /usr/local/bin/kindlyrss
 COPY --from=builder /home/templates/ /home/kindlyrss/static_data/templates/
 COPY --from=builder /home/migrations/ /home/kindlyrss/static_data/migrations/
 COPY --from=builder /home/static/ /home/kindlyrss/static_data/static/

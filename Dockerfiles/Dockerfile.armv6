@@ -10,7 +10,7 @@ COPY . ./
 
 RUN cargo build --target arm-unknown-linux-musleabihf --release
 
-FROM arm32v6/alpine:3 AS run
+FROM alpine:3 AS run
 
 RUN mkdir -p /home/kindlyrss/static_data \
     && mkdir -p /home/kindlyrss/data
