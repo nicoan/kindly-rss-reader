@@ -1,0 +1,36 @@
+# This image will be used for building the project in different platforms
+FROM rust:1.84-bullseye AS builder
+
+WORKDIR /home
+
+RUN git clone https://github.com/richfelker/musl-cross-make.git --depth 1
+
+# armv6
+RUN cd musl-cross-make \
+    && echo 'TARGET = arm-linux-musleabihf' > config.mak \
+    && echo 'OUTPUT = /build/cross-armv6' >> config.mak \
+    && make \
+    && make install
+
+# armv7
+RUN cd musl-cross-make \
+    && echo 'TARGET = armv7-linux-musleabihf' > config.mak \
+    && echo 'OUTPUT = /build/cross-armv7' >> config.mak \
+    && make \
+    && make install
+
+# arm64v8
+RUN cd musl-cross-make \
+    && echo 'TARGET = aarch64-linux-musl' > config.mak \
+    && echo 'OUTPUT = /build/cross-armv8' >> config.mak \
+    && make \
+    && make install
+
+# x86_64
+RUN cd musl-cross-make \
+    && echo 'TARGET = x86_64-linux-musl' > config.mak \
+    && echo 'OUTPUT = /build/cross-x86_64' >> config.mak \
+    && make \
+    && make install
+
+ENTRYPOINT ["/bin/bash"]

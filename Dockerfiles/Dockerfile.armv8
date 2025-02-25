@@ -2,15 +2,15 @@ FROM --platform=$BUILDPLATFORM nicoan/kindly-rss-builder AS builder
 
 WORKDIR /home
 
-ENV PATH=$PATH:/build/cross-armv7/bin
-ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER=armv7-linux-musleabihf-gcc
+ENV PATH=$PATH:/build/cross-armv8/bin
+ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc
 
-RUN rustup target add armv7-unknown-linux-musleabihf
+RUN rustup target add aarch64-unknown-linux-musl
 COPY . ./
 
-RUN cargo build --target armv7-unknown-linux-musleabihf --release
+RUN cargo build --target aarch64-unknown-linux-musl --release
 
-FROM arm32v7/alpine:3 AS run
+FROM arm64v8/alpine:3 AS run
 
 RUN mkdir -p /home/kindlyrss/static_data \
     && mkdir -p /home/kindlyrss/data
