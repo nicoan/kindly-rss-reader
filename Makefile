@@ -49,6 +49,7 @@ docker-push:
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armv6
 	docker manifest push nicoan/kindly-rss-reader:$(PACKAGE_VERSION)
 	# Create manifest for the latest tag and push
+	docker manifest rm nicoan/kindly-rss-reader:latest
 	docker manifest create nicoan/kindly-rss-reader:latest \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armx86_64 \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-arm64v8 \
