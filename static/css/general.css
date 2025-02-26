@@ -125,3 +125,13 @@ sub {
   text-align: center;
   padding: 40px;
 }
+
+.unread-count {
+  display: inline-block;
+  font-size: 0.8em;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+  vertical-align: middle;
+}

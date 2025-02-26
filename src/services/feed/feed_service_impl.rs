@@ -255,6 +255,7 @@ where
             url: feed_url.into(),
             favicon_url: None,
             last_updated: DateTime::default(),
+            unread_count: 0,
         };
 
         self.feed_repository.add_feed(feed).await?;
