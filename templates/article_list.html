@@ -7,6 +7,12 @@
             <div class="content">
                 <div id="header" class="section-header">
                     <h1> {{ context.feed.title }} </h1>
+                    <div class="section-header-buttons">
+                        <a href="/feed/{{ context.feed.id }}/delete" 
+                           onclick="return confirm('Are you sure you want to delete this feed?');">
+                            <i class="fa fa-trash button" aria-hidden="true"></i>
+                        </a>
+                    </div>
                 </div>
                 <div id="body" class="list">
                     {% for item in context.articles %}
