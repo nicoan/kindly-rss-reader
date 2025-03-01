@@ -15,7 +15,7 @@ pub struct Feed {
     pub link: String,
     pub favicon_url: Option<String>,
     pub last_updated: DateTime<Utc>,
-    pub unread_count: i64,
+    pub unread_count: u16,
 }
 
 impl TryFrom<Row> for Feed {
@@ -35,7 +35,7 @@ impl TryFrom<Row> for Feed {
                 .map(|s| s.to_owned()),
             last_updated: DateTime::from_str(row.read::<&str, _>("last_updated"))
                 .map_err(|e: chrono::ParseError| RepositoryError::Deserialization(e.into()))?,
-            unread_count: row.read::<Option<i64>, _>("unread_count").unwrap_or_else(|| 0),
+            unread_count: row.read::<i64, _>("unread_count").clamp(0, u16::MAX as i64) as u16,
         })
     }
 }

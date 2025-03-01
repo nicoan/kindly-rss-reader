@@ -1,29 +1,27 @@
-FROM rust:1.84-alpine AS builder
+FROM --platform=$BUILDPLATFORM nicoan/kindly-rss-builder AS builder
 
 WORKDIR /home
 
-RUN apk add --no-cache musl-dev
+ENV PATH=$PATH:/build/cross-armv8/bin
+ENV CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=aarch64-linux-musl-gcc
 
+RUN rustup target add aarch64-unknown-linux-musl
 COPY . ./
-RUN cargo build --release
 
-RUN ls /home/target/release
-RUN pwd
+RUN cargo build --target aarch64-unknown-linux-musl --release
 
-FROM alpine:3.21 AS run
+FROM alpine:3 AS run
 
 RUN mkdir -p /home/kindlyrss/static_data \
     && mkdir -p /home/kindlyrss/data
 
 EXPOSE 3000/tcp
 
-COPY --from=builder /home/target/release/kindle-rss-reader /usr/local/bin/kindlyrss
+COPY --from=builder /home/target/aarch64-unknown-linux-musl/release/kindle-rss-reader /usr/local/bin/kindlyrss
 COPY --from=builder /home/templates/ /home/kindlyrss/static_data/templates/
 COPY --from=builder /home/migrations/ /home/kindlyrss/static_data/migrations/
 COPY --from=builder /home/static/ /home/kindlyrss/static_data/static/
 COPY --from=builder /home/config/config.json /home/kindlyrss/data/config.json
-
-RUN ls /usr/local/bin
 
 ENV RUST_LOG=info
 ENV MAX_ARTICLES_QTY_TO_DOWNLOAD=0
