@@ -25,4 +25,6 @@ pub(crate) trait FeedService: Sync + Send {
     async fn get_item_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<(Article, String)>;
 
     async fn mark_article_as_read(&self, feed_id: Uuid, article_id: Uuid) -> Result<()>;
+    
+    async fn delete_feed(&self, feed_id: Uuid) -> Result<()>;
 }

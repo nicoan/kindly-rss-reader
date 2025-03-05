@@ -90,4 +90,18 @@ impl FeedContentRepository for FeedContentFsRepositoryImpl {
 
         Ok(())
     }
+    
+    async fn delete_feed_content(&self, feed_id: Uuid) -> Result<()> {
+        // Delete all article content files for this feed
+        let directory_path = format!("{}/articles/{}", self.config.data_path, feed_id);
+        
+        // Check if directory exists before attempting to delete
+        if Path::new(&directory_path).exists() {
+            fs::remove_dir_all(&directory_path)
+                .await
+                .map_err(|e| RepositoryError::Unexpected(e.into()))?;
+        }
+        
+        Ok(())
+    }
 }

@@ -189,4 +189,28 @@ impl FeedRepository for FeedRepositoryImpl {
             Ok(())
         })
     }
+    
+    async fn delete_feed(&self, feed_id: Uuid) -> Result<(), RepositoryError> {
+        transaction!(self, {
+            // First delete all articles related to this feed
+            let mut stmt = self
+                .connection
+                .prepare("DELETE FROM article WHERE feed_id = ?")?;
+            stmt.bind((1, feed_id.to_string().as_str()))?;
+            stmt.next()?;
+            stmt.reset()?;
+            drop(stmt);
+            
+            // Then delete the feed itself
+            let mut stmt = self
+                .connection
+                .prepare("DELETE FROM feed WHERE id = ?")?;
+            stmt.bind((1, feed_id.to_string().as_str()))?;
+            stmt.next()?;
+            stmt.reset()?;
+            drop(stmt);
+            
+            Ok(())
+        })
+    }
 }

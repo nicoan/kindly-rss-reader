@@ -17,4 +17,6 @@ pub trait FeedContentRepository: Sync + Send {
     async fn get_article_content(&self, feed_id: Uuid, article_id: Uuid) -> Result<Option<String>>;
 
     async fn save_article_content(&self, articles: &[(&Article, &String)]) -> Result<()>;
+    
+    async fn delete_feed_content(&self, feed_id: Uuid) -> Result<()>;
 }

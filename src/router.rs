@@ -8,7 +8,7 @@ use crate::{
     config::Config,
     controllers::{
         config::{set_dark_theme, set_zoom},
-        feed::{add_new_feed, add_new_feed_form, get_article, get_article_list, get_feed_list},
+        feed::{add_new_feed, add_new_feed_form, delete_feed, get_article, get_article_list, get_feed_list},
         not_found::not_found,
     },
     middlewares::error_handling_middleware::ErrorHandlingLayer,
@@ -38,6 +38,7 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
             get(add_new_feed_form::<S>).post(add_new_feed::<S>),
         )
         .route("/feed/:feed_id", get(get_article_list::<S>))
+        .route("/feed/:feed_id/delete", get(delete_feed::<S>))
         .route("/feed/:feed_id/article/:article_id", get(get_article::<S>))
         .route("/config/dark_theme", post(set_dark_theme::<S>))
         .route("/config/zoom", post(set_zoom::<S>))
