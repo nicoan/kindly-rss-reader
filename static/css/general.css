@@ -135,3 +135,42 @@ sub {
   margin-left: 8px;
   vertical-align: middle;
 }
+
+/* Add feed form styles */
+.feed-form {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 16pt;
+  margin-bottom: 10px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16pt;
+  border: 2px solid #666;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.form-submit {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.rect-btn {
+  padding: 12px 30px;
+  font-size: 16pt;
+  border: 2px solid #666;
+  border-radius: 4px;
+  background-color: transparent;
+  min-width: 160px;
+  cursor: pointer;
+}

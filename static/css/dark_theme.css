@@ -24,3 +24,15 @@ a {
     background-color: #FFF;
     color: #000;
   }
+
+  .form-label {
+    color: #FFF;
+  }
+  
+  .form-input {
+    color: #FFF;
+  }
+
+  .rect-btn {
+    color: #FFF;
+  }
