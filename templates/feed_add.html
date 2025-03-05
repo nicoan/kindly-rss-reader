@@ -5,15 +5,19 @@
     <body>
         <main class="main">
             <div class="content">
-                <div class="section-header" class="section-header">
+                <div class="section-header">
                     <h1> Add new feed </h1>
                 </div>
 
-                <div class="content">
-                    <form action="/feed/add" method="POST">
-                       <label for="url-input">Enter URL:</label><br/>
-                       <input type="url" id="url-input" name="url" placeholder="https://example.com/rss.xml" required>
-                       <button type="submit">Create</button>
+                <div class="body">
+                    <form action="/feed/add" method="POST" class="feed-form">
+                        <div class="form-group">
+                            <label for="url-input" class="form-label">Enter RSS feed URL:</label>
+                            <input type="url" id="url-input" name="url" placeholder="https://example.com/rss.xml" required class="form-input">
+                        </div>
+                        <div class="form-submit">
+                            <button type="submit" class="rect-btn">Add Feed</button>
+                        </div>
                     </form>
                 </div>
             </div>
