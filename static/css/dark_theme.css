@@ -15,6 +15,10 @@ a {
     text-decoration: none;
 }
 
+.dialog {
+  background: black;
+  }
+
 .badge-new {
   background-color: #FFF;
   color: #000;
@@ -36,3 +40,4 @@ a {
   .rect-btn {
     color: #FFF;
   }
+
