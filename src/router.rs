@@ -1,5 +1,5 @@
 use axum::{
-    routing::{get, post},
+    routing::{get, post, delete},
     Router,
 };
 use tower_http::services::ServeDir;
@@ -38,7 +38,7 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
             get(add_new_feed_form::<S>).post(add_new_feed::<S>),
         )
         .route("/feed/:feed_id", get(get_article_list::<S>))
-        .route("/feed/:feed_id/delete", get(delete_feed::<S>))
+        .route("/feed/:feed_id", delete(delete_feed::<S>))
         .route("/feed/:feed_id/article/:article_id", get(get_article::<S>))
         .route("/config/dark_theme", post(set_dark_theme::<S>))
         .route("/config/zoom", post(set_zoom::<S>))
