@@ -10,7 +10,7 @@
     var scrollPosition = 0;
     var bodyDiv = null;
     var offsetNotScroll = null;
-    var darkTheme = false;
+    var darkTheme = {{ config.dark_theme }};
     var zoom = {{ config.zoom }};
     var zoomStep = 0.1;
 
@@ -86,11 +86,11 @@
         let toggleThemeButton = document.getElementById("toggleThemeButton");
 
         if (darkTheme) {
-            toggleThemeButton.classList.remove("fa-moon-o");
-            toggleThemeButton.classList.add("fa-sun-o");
-        } else {
             toggleThemeButton.classList.remove("fa-sun-o");
             toggleThemeButton.classList.add("fa-moon-o");
+        } else {
+            toggleThemeButton.classList.remove("fa-moon-o");
+            toggleThemeButton.classList.add("fa-sun-o");
         }
 
         document.querySelectorAll("img.alternate").forEach(function (node) {
