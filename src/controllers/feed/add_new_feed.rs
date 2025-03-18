@@ -12,7 +12,6 @@ pub struct FeedAddForm {
     pub url: String,
 }
 
-// TODO: On fail redirect to the error page
 pub async fn add_new_feed<S>(
     State(state): State<S>,
     Form(rss_url): Form<FeedAddForm>,

@@ -33,7 +33,6 @@ img {
 
 .content::-webkit-scrollbar { width: 0 !important }
 
-
 .toolbar {
     display: flex;
     height: 100%;
@@ -134,4 +133,75 @@ sub {
   border-radius: 12px;
   margin-left: 8px;
   vertical-align: middle;
+}
+
+/* Add feed form styles */
+.feed-form {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 16pt;
+  margin-bottom: 10px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16pt;
+  border: 2px solid #666;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.form-submit {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.rect-btn {
+  padding: 12px 30px;
+  font-size: 16pt;
+  border: 2px solid #666;
+  border-radius: 4px;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.dialog-ovelay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dialog {
+    padding: 20px;
+    border: 2px solid #666;
+    border-radius: 5px;
+}
+
+.dialog header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dialog-msg {
+    margin: 20px 0;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
 }

@@ -15,12 +15,29 @@ a {
     text-decoration: none;
 }
 
+.dialog {
+  background: black;
+}
+
 .badge-new {
-  background-color: #FFF;
-  color: #000;
+    background-color: #FFF;
+    color: #000;
 }
 
 .unread-count {
     background-color: #FFF;
     color: #000;
-  }
+}
+
+.form-label {
+    color: #FFF;
+}
+
+.form-input {
+    color: #FFF;
+}
+
+.rect-btn {
+    color: #FFF;
+}
+

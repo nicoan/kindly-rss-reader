@@ -1,0 +1,45 @@
+<div class='dialog-ovelay' id='dialog-overlay' style='display: none;'>
+    <div class='dialog'>
+        <header>
+            <h2>{{ title }}</h2>
+        </header>
+        <div class='dialog-msg'>
+            <h3>{{ message }}</h3>
+        </div>
+        <footer>
+            <div class='controls'>
+                <button class='rect-btn' onclick="doAction();">{{ true_text }}</button>
+                <button class='rect-btn' onclick="cancelAction();">{{ false_text }}</button>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    function cancelAction() {
+        document.getElementById('dialog-overlay').style.display = 'none';
+    }
+
+    function doAction() {
+        fetch('{{action_url}}',  { method: '{{method}}' || 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '{{sucess_url}}' || '/';
+                } else {
+                    // TODO: Remove this, redirect to error page with a message
+                    alert('Action failed.');
+                }
+            })
+            .catch(error => {
+                // TODO: Remove this, redirect to error page with a message
+                alert('An error occurred: ' + error.message);
+            });
+
+        document.getElementById('dialog-overlay').style.display = 'none';
+    }
+
+    // Helper function to show dialog
+    function showDialog() {
+        document.getElementById('dialog-overlay').style.display = 'block';
+    }
+</script>

@@ -13,6 +13,7 @@ pub(crate) type Result<T> = std::result::Result<T, TemplateServiceError>;
 pub const TEMPLATE_NAME_ARTICLE: &str = "article";
 pub const TEMPLATE_NAME_ARTICLE_LIST: &str = "article_list";
 pub const TEMPLATE_NAME_COMMON_HEAD: &str = "common_head";
+pub const TEMPLATE_NAME_DIALOG: &str = "dialog";
 pub const TEMPLATE_NAME_FEED_ADD: &str = "feed_add";
 pub const TEMPLATE_NAME_FEED_LIST: &str = "feed_list";
 pub const TEMPLATE_NAME_ERROR: &str = "error";
@@ -20,15 +21,17 @@ pub const TEMPLATE_NAME_TOOLBAR: &str = "toolbar";
 pub const TEMPLATE_PATH_ARTICLE: &str = "templates/article.html";
 pub const TEMPLATE_PATH_ARTICLE_LIST: &str = "templates/article_list.html";
 pub const TEMPLATE_PATH_COMMON_HEAD: &str = "templates/common_head.html";
+pub const TEMPLATE_PATH_DIALOG: &str = "templates/dialog.html";
 pub const TEMPLATE_PATH_FEED_ADD: &str = "templates/feed_add.html";
 pub const TEMPLATE_PATH_FEED_LIST: &str = "templates/feed_list.html";
 pub const TEMPLATE_PATH_ERROR: &str = "templates/error.html";
 pub const TEMPLATE_PATH_TOOLBAR: &str = "templates/toolbar.html";
 
-pub const TEMPLATES: [(&str, &str); 7] = [
+pub const TEMPLATES: [(&str, &str); 8] = [
     (TEMPLATE_NAME_ARTICLE, TEMPLATE_PATH_ARTICLE),
     (TEMPLATE_NAME_ARTICLE_LIST, TEMPLATE_PATH_ARTICLE_LIST),
     (TEMPLATE_NAME_COMMON_HEAD, TEMPLATE_PATH_COMMON_HEAD),
+    (TEMPLATE_NAME_DIALOG, TEMPLATE_PATH_DIALOG),
     (TEMPLATE_NAME_FEED_ADD, TEMPLATE_PATH_FEED_ADD),
     (TEMPLATE_NAME_FEED_LIST, TEMPLATE_PATH_FEED_LIST),
     (TEMPLATE_NAME_ERROR, TEMPLATE_PATH_ERROR),

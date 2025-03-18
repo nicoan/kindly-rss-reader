@@ -453,4 +453,18 @@ where
             .mark_article_as_read(feed_id, article_id)
             .await?)
     }
+    
+    async fn delete_feed(&self, feed_id: Uuid) -> Result<()> {
+        // First verify that the feed exists
+        let feed = self.feed_repository.get_feed(feed_id).await?;
+        if feed.is_none() {
+            return Err(FeedServiceError::FeedNotFound(feed_id));
+        }
+        
+        // Delete the feed content files
+        self.feed_content_repository.delete_feed_content(feed_id).await?;
+        
+        // Delete the feed and its articles from the database
+        Ok(self.feed_repository.delete_feed(feed_id).await?)
+    }
 }
