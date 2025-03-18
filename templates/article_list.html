@@ -31,51 +31,15 @@
             </div>
             {% include "toolbar" %}
         </main>
-        <script>
-            function Confirm(title, msg, trueText, falseText, link) {
-            var content = document.createElement('div');
-            content.className = 'dialog-ovelay';
-            content.innerHTML = `
-                <div class='dialog'>
-                <header>
-                    <h2> ${title}</h2>
-                </header>
-                <div class='dialog-msg'>
-                    <h3>${msg}</h3>
-                </div>
-                <footer>
-                    <div class='controls'>
-                    <button class='rect-btn doAction'>${trueText}</button>
-                    <button class='rect-btn cancelAction'>${falseText}</button>
-                    </div>
-                </footer>
-                </div>
-            `;
-            document.body.prepend(content);
-
-            document.querySelector('.doAction').addEventListener('click', function () {
-                fetch(link, { method: 'DELETE' })
-                .then(response => {
-                    if (response.ok) {
-                    window.location.href = '/';
-                    } else {
-                    alert('Failed to delete the feed.');
-                    }
-                })
-                .catch(error => {
-                    alert('An error occurred: ' + error.message);
-                });
-                content.remove();
-            });
-
-            document.querySelector('.cancelAction').addEventListener('click', function () {
-                content.remove();
-            });
-            }
         
+        {% with title="Delete Feed", message="Are you sure you want to delete this feed?", true_text="Yes", false_text="Cancel" %}
+            {% include "dialog" %}
+        {% endwith %}
+        
+        <script>
             document.getElementById('confirmDeletion').addEventListener('click', function (event) {
-            event.preventDefault();
-            Confirm('Delete Feed', 'Are you sure you want to delete this feed?', 'Yes', 'Cancel', "/feed/{{ context.feed.id }}");
+                event.preventDefault();
+                showDialog("/feed/{{ context.feed.id }}", "DELETE", "/");
             });
         </script>
     </body>

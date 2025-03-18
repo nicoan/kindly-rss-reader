@@ -1,0 +1,54 @@
+<div class='dialog-ovelay' id='dialog-overlay' style='display: none;'>
+    <div class='dialog'>
+        <header>
+            <h2>{{ title }}</h2>
+        </header>
+        <div class='dialog-msg'>
+            <h3>{{ message }}</h3>
+        </div>
+        <footer>
+            <div class='controls'>
+                <button class='rect-btn doAction'>{{ true_text }}</button>
+                <button class='rect-btn cancelAction'>{{ false_text }}</button>
+            </div>
+        </footer>
+    </div>
+</div>
+
+<script>
+    // Common dialog functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const dialogOverlay = document.getElementById('dialog-overlay');
+        
+        // Cancel action handler
+        document.querySelector('.cancelAction').addEventListener('click', function() {
+            dialogOverlay.style.display = 'none';
+        });
+        
+        // Confirm action handler - action URL comes from the caller
+        document.querySelector('.doAction').addEventListener('click', function() {
+            if (window.dialogActionUrl) {
+                fetch(window.dialogActionUrl, { method: window.dialogMethod || 'DELETE' })
+                    .then(response => {
+                        if (response.ok) {
+                            window.location.href = window.dialogSuccessRedirect || '/';
+                        } else {
+                            alert('Action failed.');
+                        }
+                    })
+                    .catch(error => {
+                        alert('An error occurred: ' + error.message);
+                    });
+            }
+            dialogOverlay.style.display = 'none';
+        });
+    });
+    
+    // Helper function to show dialog
+    function showDialog(actionUrl, method, successRedirect) {
+        window.dialogActionUrl = actionUrl;
+        window.dialogMethod = method;
+        window.dialogSuccessRedirect = successRedirect;
+        document.getElementById('dialog-overlay').style.display = 'block';
+    }
+</script>
