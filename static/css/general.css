@@ -10,6 +10,13 @@ body {
     font-family: Calibri, Helvetica, Sans-Serif;
 }
 
+/* This is used to remove ghost letters when scrolling */
+.all-white,
+.all-white * {
+    background-color: #555 !important;
+    color: #555 !important;
+}
+
 main {
     display: flex;
     height: 100vh;

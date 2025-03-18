@@ -36,24 +36,46 @@
         darkTheme = {{ config.dark_theme }};
     }
 
+    function removeGhostLettersInit() {
+        if (darkTheme) {
+            document.getElementById("body").classList.add("all-white");
+        }
+    }
+
+    function removeGhostLettersFinish() {
+        setTimeout(function() {
+            if (darkTheme) {
+                document.getElementById("body").classList.remove("all-white");
+            }
+        }, 10);
+    }
+
     function scrollDown() {
+        removeGhostLettersInit();
         scrollPosition = Math.min(scrollPosition + bodyDiv.offsetHeight - offsetNotScroll, bodyDiv.scrollHeight);
         bodyDiv.scroll(0, scrollPosition);
+        removeGhostLettersFinish();
     }
 
     function scrollUp() {
+        removeGhostLettersInit();
         scrollPosition = Math.max(scrollPosition - bodyDiv.offsetHeight + offsetNotScroll, 0);
         bodyDiv.scroll(0, scrollPosition);
+        removeGhostLettersFinish();
     }
 
     function scrollToTop() {
+        removeGhostLettersInit();
         scrollPosition = 0;
         bodyDiv.scroll(0, scrollPosition);
+        removeGhostLettersFinish();
     }
 
     function scrollToBottom() {
+        removeGhostLettersInit();
         scrollPosition = bodyDiv.scrollHeight - bodyDiv.offsetHeight;
         bodyDiv.scroll(0, scrollPosition);
+        removeGhostLettersFinish();
     }
 
     function setZoomConfig(zoom) {
