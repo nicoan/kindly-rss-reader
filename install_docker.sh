@@ -3,7 +3,7 @@ echo "Creating data directory..."
 mkdir -p ./kindly-rss-data/data
 
 echo "Pulling latest docker image..."
-docker pull nicoan/kindly-rss-reader
+docker pull nicoan/kindly-rss-reader:latest
 
 echo "Running the container.."
 docker run \
@@ -11,4 +11,4 @@ docker run \
     -p 3000:3000 \
     -v "$(pwd)/kindly-rss-data/data:/home/kindlyrss/data" \
     --name kindly-rss-reader \
-    nicoan/kindly-rss-reader
+    nicoan/kindly-rss-reader:latest
