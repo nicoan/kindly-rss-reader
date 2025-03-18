@@ -17,27 +17,27 @@ a {
 
 .dialog {
   background: black;
-  }
+}
 
 .badge-new {
-  background-color: #FFF;
-  color: #000;
+    background-color: #FFF;
+    color: #000;
 }
 
 .unread-count {
     background-color: #FFF;
     color: #000;
-  }
+}
 
-  .form-label {
+.form-label {
     color: #FFF;
-  }
-  
-  .form-input {
-    color: #FFF;
-  }
+}
 
-  .rect-btn {
+.form-input {
     color: #FFF;
-  }
+}
+
+.rect-btn {
+    color: #FFF;
+}
 

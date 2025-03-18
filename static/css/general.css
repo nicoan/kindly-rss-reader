@@ -33,7 +33,6 @@ img {
 
 .content::-webkit-scrollbar { width: 0 !important }
 
-
 .toolbar {
     display: flex;
     height: 100%;
@@ -185,19 +184,23 @@ sub {
     justify-content: center;
     align-items: center;
 }
+
 .dialog {
     padding: 20px;
     border: 2px solid #666;
     border-radius: 5px;
 }
+
 .dialog header {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
+
 .dialog-msg {
     margin: 20px 0;
 }
+
 .controls {
     display: flex;
     justify-content: space-between;

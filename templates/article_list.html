@@ -8,7 +8,7 @@
                 <div id="header" class="section-header">
                     <h1> {{ context.feed.title }} </h1>
                     <div class="section-header-buttons">
-                        <a href="#" id="confirmDeletion">
+                        <a href="#" id="confirmDeletion" onclick="showDialog();">
                             <i class="fa fa-trash button" aria-hidden="true"></i>
                         </a>
                     </div>
@@ -31,16 +31,17 @@
             </div>
             {% include "toolbar" %}
         </main>
-        
-        {% with title="Delete Feed", message="Are you sure you want to delete this feed?", true_text="Yes", false_text="Cancel" %}
+
+        {% with
+            title="Delete Feed",
+            message="Are you sure you want to delete this feed?",
+            true_text="Yes",
+            false_text="Cancel",
+            action_url="/feed/" ~ context.feed.id,
+            sucess_url="/",
+            method="DELETE"
+        %}
             {% include "dialog" %}
         {% endwith %}
-        
-        <script>
-            document.getElementById('confirmDeletion').addEventListener('click', function (event) {
-                event.preventDefault();
-                showDialog("/feed/{{ context.feed.id }}", "DELETE", "/");
-            });
-        </script>
     </body>
 </html>
