@@ -4,12 +4,10 @@ mod feed_parser_impl;
 pub use error::FeedParserError;
 pub use feed_parser_impl::FeedParserImpl;
 
-use crate::models::article::Article;
 use crate::models::feed::Feed;
 use anyhow::Result;
 use axum::async_trait;
 use axum::body::Bytes;
-use uuid::Uuid;
 
 #[async_trait]
 pub trait FeedParser: Send + Sync {
@@ -19,8 +17,6 @@ pub trait FeedParser: Send + Sync {
     /// Parse feed items (RSS items or Atom entries) and create Article models
     async fn parse_feed_items(
         &self, 
-        feed_id: Uuid, 
-        feed_link: String,
         content: &Bytes
     ) -> Result<Vec<(String, Option<String>)>, FeedParserError>;
     

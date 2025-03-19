@@ -120,8 +120,6 @@ impl FeedParser for FeedParserImpl {
     
     async fn parse_feed_items(
         &self, 
-        feed_id: Uuid, 
-        feed_link: String,
         content: &Bytes
     ) -> Result<Vec<(String, Option<String>)>, FeedParserError> {
         let mut items = Vec::new();

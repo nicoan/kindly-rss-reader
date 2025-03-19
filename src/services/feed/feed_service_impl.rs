@@ -4,7 +4,6 @@ use super::Result;
 use crate::config::Config;
 use crate::models::article::Article;
 use crate::providers::feed_parser::FeedParser;
-use crate::providers::feed_parser::FeedParserImpl;
 use crate::providers::html_processor::HtmlProcessor;
 use crate::providers::image_processor::ImageProcessor;
 use crate::providers::image_processor::ImageProcessorFsImpl;
@@ -179,7 +178,7 @@ where
                     .collect();
                     
                 // Parse the feed items using our feed parser
-                let feed_items = self.feed_parser.parse_feed_items(feed_id, feed.link.clone(), &content)
+                let feed_items = self.feed_parser.parse_feed_items(&content)
                     .await
                     .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
                 
