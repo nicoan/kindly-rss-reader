@@ -6,7 +6,7 @@ PACKAGE_VERSION=$(shell cat Cargo.toml | grep version | head -n 1 | awk '{print 
 # I opted to use multiple Dockerfiles to take advantage of the layer caching mechanism.
 docker-build:
 	docker build \
-		--tag nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armx86_64 \
+		--tag nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-x86_64 \
 		-f ./dockerfiles/Dockerfile.x86_64 \
 		--platform linux/amd64 \
 		.
@@ -37,13 +37,13 @@ docker-prepare-build-image:
 # Push new versions
 docker-push:
 	# Push different architecture images
-	docker push nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armx86_64
+	docker push nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-x86_64
 	docker push nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-arm64v8
 	docker push nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armv7
 	docker push nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armv6
 	# Create manifest for the package version and push
 	docker manifest create nicoan/kindly-rss-reader:$(PACKAGE_VERSION) \
-		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armx86_64 \
+		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-x86_64 \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-arm64v8 \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armv7 \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armv6
@@ -51,7 +51,7 @@ docker-push:
 	# Create manifest for the latest tag and push
 	docker manifest rm nicoan/kindly-rss-reader:latest
 	docker manifest create nicoan/kindly-rss-reader:latest \
-		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armx86_64 \
+		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-x86_64 \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-arm64v8 \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armv7 \
 		--amend nicoan/kindly-rss-reader:$(PACKAGE_VERSION)-armv6
