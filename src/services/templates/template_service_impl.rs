@@ -63,7 +63,7 @@ where
         self.environment
             .get_template(name)
             .map_err(|e| TemplateServiceError::Getting(name.to_owned(), e))?
-            .render(context! { config => config, context })
+            .render(context! { version => env!("CARGO_PKG_VERSION"), config => config, context })
             .map_err(|e| TemplateServiceError::Rendering(name.to_owned(), e))
     }
 }
