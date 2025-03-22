@@ -17,9 +17,6 @@ pub enum FeedServiceError {
     #[error("the feed {0} was not found")]
     FeedNotFound(Uuid),
 
-    #[error("there was an error parsing the date for {0}")]
-    ParsingDate(String, #[source] chrono::ParseError),
-
     #[error("a repository error ocurred: {0}")]
     Repository(#[from] RepositoryError),
 

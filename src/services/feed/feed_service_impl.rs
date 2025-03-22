@@ -3,7 +3,7 @@ use super::FeedService;
 use super::Result;
 use crate::config::Config;
 use crate::models::article::Article;
-use crate::providers::feed_parser::FeedParser;
+use crate::providers::feed_parser::{FeedParser, ParsedItem};
 use crate::providers::html_processor::HtmlProcessor;
 use crate::providers::image_processor::ImageProcessor;
 use crate::providers::image_processor::ImageProcessorFsImpl;
@@ -119,6 +119,83 @@ where
             .map_err(|e| FeedServiceError::Unexpected(e.into()))
     }
 
+    /// This function processes a feed item and adds it to the feed's article list.
+    ///
+    /// If `download_content` is `true`, then the article is downloaded and processed, otherwise,
+    /// it is only added to the list
+    async fn process_parsed_item(
+        download_content: bool,
+        image_processor: Arc<impl ImageProcessor>,
+        html_processor: Arc<HP>,
+        feed_id: Uuid,
+        feed_link: Arc<String>,
+        item: ParsedItem,
+    ) -> Result<(Article, Option<ArticleContent>)> {
+        let article_id = Uuid::new_v4();
+
+        let article_link = item.link.clone().ok_or_else(|| {
+            FeedServiceError::Unexpected(anyhow::anyhow!(
+                "an article for the feed {} does not have a link",
+                feed_id
+            ))
+        })?;
+
+        // If the items have content, we cache it in the fs
+        let (html_parsed, content) = if let Some(content) = item.content {
+            (false, Some(content))
+        }
+        // Otherwise we follow the link and download the html
+        else if download_content {
+            let article = Self::download_html_article(&article_link).await?;
+            (true, Some(article))
+        } else {
+            (true, None)
+        };
+
+        let content = if let Some(content) = content {
+            if html_parsed {
+                Some(
+                    Self::process_html_content(
+                        &content,
+                        html_processor,
+                        image_processor,
+                        feed_link,
+                    )
+                    .await?,
+                )
+            } else {
+                Some(
+                    Self::process_rss_content(&content, html_processor, image_processor, feed_link)
+                        .await?,
+                )
+            }
+        } else {
+            None
+        };
+
+        let date = item.pub_date.unwrap_or_else(Utc::now);
+
+        Ok((
+            Article {
+                id: article_id,
+                feed_id,
+                title: item.title,
+                link: article_link,
+                guid: item.guid.ok_or_else(|| {
+                    FeedServiceError::Unexpected(anyhow::anyhow!(
+                        "an article for the feed {} does not have a guid",
+                        feed_id
+                    ))
+                })?,
+                author: item.author,
+                html_parsed,
+                content: None,
+                read: false,
+                last_updated: date,
+            },
+            content,
+        ))
+    }
 
     // TODO: File paths are not responsibility of this service, they should be managed by
     // ImageProcessorFsImpl and FeedContentFsRepositoryImpl
@@ -139,7 +216,7 @@ where
     FR: FeedRepository + 'static,
     FCR: FeedContentRepository + 'static,
     HP: HtmlProcessor,
-    FP: FeedParser,
+    FP: FeedParser + 'static,
 {
     async fn get_feed_list(&self) -> Result<Vec<Feed>> {
         Ok(self.feed_repository.get_feed_list().await?)
@@ -151,11 +228,33 @@ where
 
     async fn add_feed(&self, feed_url: Url) -> Result<()> {
         let content = Self::download_feed_content(feed_url.as_str()).await?;
-        
-        let feed = self.feed_parser.parse_feed(feed_url.as_str(), &content)
-            .await
+
+        let parsed_feed = self.feed_parser.parse_feed(&content)
             .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
-            
+
+        let link_path = feed_url.path_segments();
+        let link = if let Some(link_path) = link_path {
+            let mut final_path = link_path.collect::<Vec<&str>>();
+            final_path.remove(final_path.len() - 1);
+            let final_path = final_path.join("/");
+            let mut link = feed_url.origin().unicode_serialization();
+            link.push('/');
+            link.push_str(&final_path);
+            link
+        } else {
+            feed_url.origin().unicode_serialization()
+        };
+
+        let feed = Feed {
+            id: Uuid::new_v4(),
+            title: parsed_feed.title,
+            link,
+            url: feed_url.into(),
+            favicon_url: None,
+            last_updated: DateTime::default(),
+            unread_count: 0,
+        };
+
         self.feed_repository.add_feed(feed).await?;
 
         Ok(())
@@ -168,26 +267,35 @@ where
                 > TimeDelta::minutes(self.config.minutes_to_check_for_updates.into())
             {
                 let content = Self::download_feed_content(feed.url.as_str()).await?;
-                
-                // First we check with the feed items and the database if any of the articles is new
+                let parsed_feed = self.feed_parser.parse_feed(&content)
+                    .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
+
+                // First we check with the channel and the database if any of the articles is new
                 let saved_articles = self.feed_repository.get_feed_articles(feed_id).await?;
 
                 let articles_guid: HashSet<&str> = saved_articles
                     .iter()
                     .map(|article| &*article.guid)
                     .collect();
-                    
-                // Parse the feed items using our feed parser
-                let feed_items = self.feed_parser.parse_feed_items(&content)
-                    .await
-                    .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
-                
-                // Filter out items that already exist in the database
-                let new_items: Vec<(String, Option<String>)> = feed_items
+
+                let new_items: Vec<ParsedItem> = parsed_feed
+                    .items
                     .into_iter()
                     .filter(|item| {
-                        let identifier = self.feed_parser.get_item_identifier(item);
-                        !articles_guid.contains(&*identifier)
+                        if let Some(guid) = &item.guid {
+                            !articles_guid.contains(guid.as_str())
+                        // We filter by link because if guid is not found, we identify the article
+                        // by its link
+                        } else if let Some(link) = &item.link {
+                            !articles_guid.contains(link.as_str())
+                        } else {
+                            tracing::warn!(
+                                r#"found an article for feed {} with id "{}" with no guid or link"#,
+                                feed.title,
+                                feed_id
+                            );
+                            false
+                        }
                     })
                     .collect();
 
@@ -205,22 +313,19 @@ where
                 let file_path = self.get_article_file_path(feed_id);
                 let image_processor = Arc::new(ImageProcessorFsImpl::new(router_path, file_path));
 
-                // TODO: We are assuming the items are sorted by pub date desc
+                // TODO: We are assuming the channel items are sorted by pub date desc
 
-                // Create the articles from the feed items
+                // Create the articles from the parsed items
                 let mut processed_html_articles = 0;
-                for (item_data, content) in new_items {
+                for item in new_items {
                     let feed_link = feed_link.clone();
                     let img_processor = image_processor.clone();
                     let html_processor = self.html_processor.clone();
-                    
-                    // Parse the item_data JSON to create an Article
-                    let item_json: serde_json::Value = serde_json::from_str(&item_data)
-                        .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
-                    
-                    // If content is not present, we need to download it
-                    let has_content = content.is_some();
-                    if !has_content {
+
+                    // If it is an HTML article, we add one to the counter
+                    // If content exist then we process it anyway because we already donwloaded
+                    // it... otherwise we only process it if we processed less than config.max_articles_qty_to_download
+                    if item.content.is_none() {
                         processed_html_articles += 1;
                     }
 
@@ -230,94 +335,16 @@ where
                         } else {
                             true
                         };
-                        
-                    let title = item_json["title"].as_str()
-                        .unwrap_or("Unknown title")
-                        .to_string();
-                        
-                    let link = item_json["link"].as_str()
-                        .ok_or_else(|| FeedServiceError::Unexpected(anyhow::anyhow!(
-                            "Item missing link"
-                        )))?
-                        .to_string();
-                        
-                    let guid = item_json["guid"].as_str()
-                        .ok_or_else(|| FeedServiceError::Unexpected(anyhow::anyhow!(
-                            "Item missing guid"
-                        )))?
-                        .to_string();
-                        
-                    let author = item_json["author"].as_str().map(String::from);
-                    
-                    let date_str = item_json["date"].as_str()
-                        .ok_or_else(|| FeedServiceError::Unexpected(anyhow::anyhow!(
-                            "Item missing date"
-                        )))?;
-                        
-                    let date = DateTime::parse_from_rfc3339(date_str)
-                        .map_err(|e| FeedServiceError::ParsingDate(link.clone(), e))?
-                        .with_timezone(&Utc);
-                    
-                    let html_parsed = item_json["html_parsed"].as_bool().unwrap_or(false);
-                    
-                    // Create a new Article
-                    let article = Article {
-                        id: Uuid::new_v4(),
+
+                    //  Start a task to process the article
+                    join_set.spawn(Self::process_parsed_item(
+                        download_content,
+                        img_processor,
+                        html_processor,
                         feed_id,
-                        title,
-                        link: link.clone(),
-                        guid,
-                        author,
-                        html_parsed,
-                        content: None,
-                        read: false,
-                        last_updated: date,
-                    };
-                    
-                    // Start a task to process the article content if available
-                    if let Some(content) = content {
-                        let content_clone = content.clone();
-                        join_set.spawn(async move {
-                            let processed_content = if html_parsed {
-                                Self::process_html_content(
-                                    &content_clone,
-                                    html_processor,
-                                    img_processor,
-                                    feed_link,
-                                ).await?
-                            } else {
-                                Self::process_rss_content(
-                                    &content_clone,
-                                    html_processor,
-                                    img_processor,
-                                    feed_link,
-                                ).await?
-                            };
-                            
-                            Ok((article, Some(processed_content)))
-                        });
-                    } 
-                    // Or download the content if requested
-                    else if download_content {
-                        let link_clone = link.clone();
-                        join_set.spawn(async move {
-                            let downloaded_content = Self::download_html_article(&link_clone).await?;
-                            let processed_content = Self::process_html_content(
-                                &downloaded_content,
-                                html_processor,
-                                img_processor,
-                                feed_link,
-                            ).await?;
-                            
-                            Ok((article, Some(processed_content)))
-                        });
-                    } 
-                    // Or just return the article without content
-                    else {
-                        join_set.spawn(async move {
-                            Ok((article, None))
-                        });
-                    }
+                        feed_link,
+                        item,
+                    ));
                 }
 
                 let mut processed_articles = vec![];

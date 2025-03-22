@@ -2,21 +2,23 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum FeedParserError {
-    #[error("Error parsing RSS feed: {0}")]
-    RssParsingError(#[from] rss::Error),
-    
-    #[error("Error parsing Atom feed: {0}")]
-    AtomParsingError(#[from] atom_syndication::Error),
-    
-    #[error("Error parsing date: {0}")]
-    DateParsingError(#[from] chrono::ParseError),
-    
-    #[error("Invalid feed format")]
-    InvalidFeedFormat,
-    
-    #[error("Feed item missing required fields: {0}")]
-    MissingFields(String),
-    
+    #[error("Failed to parse RSS feed: {0}")]
+    RssParseError(#[from] rss::Error),
+
+    #[error("Failed to parse Atom feed: {0}")]
+    AtomParseError(#[from] atom_syndication::Error),
+
+    #[error("Unsupported feed format")]
+    UnsupportedFormat,
+
+    #[error("Missing required field: {0}")]
+    MissingField(String),
+
+    #[error("Failed to parse date: {0}")]
+    DateParseError(#[from] chrono::ParseError),
+
     #[error("Unexpected error: {0}")]
     Unexpected(#[from] anyhow::Error),
 }
+
+pub type Result<T> = std::result::Result<T, FeedParserError>;
