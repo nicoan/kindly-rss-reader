@@ -35,8 +35,7 @@ impl FeedParser for AtomParserImpl {
                 // Get content or summary
                 let content = entry
                     .content()
-                    .and_then(|c| c.value.as_ref().map(|v| v.to_owned()))
-                    .or_else(|| entry.summary().map(|s| s.value.to_owned()));
+                    .and_then(|c| c.value.as_ref().map(|v| v.to_owned()));
 
                 // Get author name if available
                 let author = entry.authors().first().map(|a| a.name().to_owned());
