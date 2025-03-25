@@ -20,6 +20,9 @@ pub enum FeedServiceError {
     #[error("a repository error ocurred: {0}")]
     Repository(#[from] RepositoryError),
 
+    #[error("Unsupported feed format")]
+    UnsupportedFormat,
+
     #[error("unexpected error ocurred: {0}")]
     Unexpected(#[source] anyhow::Error),
 }

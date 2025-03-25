@@ -3,7 +3,9 @@ use super::FeedService;
 use super::Result;
 use crate::config::Config;
 use crate::models::article::Article;
-use crate::providers::feed_parser::{FeedParser, ParsedItem};
+use crate::models::parsed_feed::ParsedFeed;
+use crate::models::parsed_feed::ParsedItem;
+use crate::providers::feed_parser::FeedParser;
 use crate::providers::html_processor::HtmlProcessor;
 use crate::providers::image_processor::ImageProcessor;
 use crate::providers::image_processor::ImageProcessorFsImpl;
@@ -22,33 +24,37 @@ use uuid::Uuid;
 
 type ArticleContent = String;
 
-pub struct FeedServiceImpl<FR, FCR, HP, FP>
+pub struct FeedServiceImpl<FR, FCR, HP, FRP, FAP>
 where
     FR: FeedRepository,
     FCR: FeedContentRepository,
     HP: HtmlProcessor + 'static,
-    FP: FeedParser + 'static,
+    FRP: FeedParser + 'static,
+    FAP: FeedParser + 'static,
 {
     feed_repository: Arc<FR>,
     feed_content_repository: Arc<FCR>,
     html_processor: Arc<HP>,
-    feed_parser: Arc<FP>,
+    atom_parser: Arc<FRP>,
+    rss_parser: Arc<FAP>,
     config: Arc<Config>,
     articles_router_path: &'static str,
 }
 
-impl<FR, FCR, HP, FP> FeedServiceImpl<FR, FCR, HP, FP>
+impl<FR, FCR, HP, FRP, FAP> FeedServiceImpl<FR, FCR, HP, FRP, FAP>
 where
     FR: FeedRepository,
     FCR: FeedContentRepository,
     HP: HtmlProcessor + 'static,
-    FP: FeedParser + 'static,
+    FRP: FeedParser + 'static,
+    FAP: FeedParser + 'static,
 {
     pub fn new(
         feed_repository: Arc<FR>,
         feed_content_repository: Arc<FCR>,
         html_processor: Arc<HP>,
-        feed_parser: Arc<FP>,
+        atom_parser: Arc<FRP>,
+        rss_parser: Arc<FAP>,
         config: Arc<Config>,
         articles_router_path: &'static str,
     ) -> Self {
@@ -56,7 +62,8 @@ where
             feed_repository,
             feed_content_repository,
             html_processor,
-            feed_parser,
+            atom_parser,
+            rss_parser,
             config,
             articles_router_path,
         }
@@ -78,6 +85,16 @@ where
             .text()
             .await
             .map_err(|e| FeedServiceError::Unexpected(e.into()))
+    }
+
+    fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed> {
+        if let Ok(parsed_feed) = self.rss_parser.parse_feed(content) {
+            Ok(parsed_feed)
+        } else if let Ok(parsed_feed) = self.atom_parser.parse_feed(content) {
+            Ok(parsed_feed)
+        } else {
+            Err(FeedServiceError::UnsupportedFormat)
+        }
     }
 
     async fn process_html_content(
@@ -211,12 +228,13 @@ where
 }
 
 #[async_trait]
-impl<FR, FCR, HP, FP> FeedService for FeedServiceImpl<FR, FCR, HP, FP>
+impl<FR, FCR, HP, FRP, FAP> FeedService for FeedServiceImpl<FR, FCR, HP, FRP, FAP>
 where
     FR: FeedRepository + 'static,
     FCR: FeedContentRepository + 'static,
     HP: HtmlProcessor,
-    FP: FeedParser + 'static,
+    FRP: FeedParser + 'static,
+    FAP: FeedParser + 'static,
 {
     async fn get_feed_list(&self) -> Result<Vec<Feed>> {
         Ok(self.feed_repository.get_feed_list().await?)
@@ -229,8 +247,7 @@ where
     async fn add_feed(&self, feed_url: Url) -> Result<()> {
         let content = Self::download_feed_content(feed_url.as_str()).await?;
 
-        let parsed_feed = self.feed_parser.parse_feed(&content)
-            .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
+        let parsed_feed = self.parse_feed(&content)?;
 
         let link_path = feed_url.path_segments();
         let link = if let Some(link_path) = link_path {
@@ -267,8 +284,7 @@ where
                 > TimeDelta::minutes(self.config.minutes_to_check_for_updates.into())
             {
                 let content = Self::download_feed_content(feed.url.as_str()).await?;
-                let parsed_feed = self.feed_parser.parse_feed(&content)
-                    .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
+                let parsed_feed = self.parse_feed(&content)?;
 
                 // First we check with the channel and the database if any of the articles is new
                 let saved_articles = self.feed_repository.get_feed_articles(feed_id).await?;
@@ -450,17 +466,19 @@ where
             .mark_article_as_read(feed_id, article_id)
             .await?)
     }
-    
+
     async fn delete_feed(&self, feed_id: Uuid) -> Result<()> {
         // First verify that the feed exists
         let feed = self.feed_repository.get_feed(feed_id).await?;
         if feed.is_none() {
             return Err(FeedServiceError::FeedNotFound(feed_id));
         }
-        
+
         // Delete the feed content files
-        self.feed_content_repository.delete_feed_content(feed_id).await?;
-        
+        self.feed_content_repository
+            .delete_feed_content(feed_id)
+            .await?;
+
         // Delete the feed and its articles from the database
         Ok(self.feed_repository.delete_feed(feed_id).await?)
     }

@@ -1,18 +1,17 @@
-use std::io::BufReader;
+use crate::models::parsed_feed::{ParsedFeed, ParsedItem};
 
+use super::error::FeedParserError;
+use super::feed_parser_trait::FeedParser;
+use super::Result;
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use rss::Channel;
-
-use super::error::{FeedParserError, Result};
-use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
+use std::io::BufReader;
 
 pub struct RssParserImpl;
 
 impl RssParserImpl {
-    pub fn new() -> Self {
-        Self
-    }
-
+    // TODO: This should be in other struct
     fn parse_date(&self, date_str: &str) -> Result<DateTime<Utc>> {
         DateTime::parse_from_rfc2822(date_str)
             .map(|dt| dt.with_timezone(&Utc))
@@ -23,15 +22,14 @@ impl RssParserImpl {
 impl FeedParser for RssParserImpl {
     fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed> {
         let reader = BufReader::new(content);
-        let channel = Channel::read_from(reader)?;
+        let channel =
+            Channel::read_from(reader).map_err(|e| FeedParserError::ParseError(anyhow!(e)))?;
 
         let items = channel
             .items()
             .iter()
             .map(|item| {
-                let pub_date = item
-                    .pub_date()
-                    .and_then(|date| self.parse_date(date).ok());
+                let pub_date = item.pub_date().and_then(|date| self.parse_date(date).ok());
 
                 ParsedItem {
                     title: item.title().unwrap_or("Unknown title").to_owned(),
@@ -45,19 +43,12 @@ impl FeedParser for RssParserImpl {
             .collect();
 
         let link = channel.link().to_owned();
-        
+
         Ok(ParsedFeed {
             title: channel.title().to_owned(),
             link,
             items,
         })
-    }
-
-    fn can_parse(&self, content: &[u8]) -> bool {
-        // Check if content looks like RSS by trying to parse it
-        // We don't care about the result, just whether it parses without error
-        let reader = BufReader::new(content);
-        Channel::read_from(reader).is_ok()
     }
 }
 
@@ -82,10 +73,10 @@ mod tests {
                 </item>
             </channel>
         </rss>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = RssParserImpl::new();
-        assert!(parser.can_parse(rss_content));
+        assert!(RssParserImpl.parse_feed(rss_content).is_ok());
     }
 
     #[test]
@@ -104,9 +95,9 @@ mod tests {
                 <updated>2023-01-01T12:00:00Z</updated>
             </entry>
         </feed>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = RssParserImpl::new();
-        assert!(!parser.can_parse(atom_content));
+        assert!(RssParserImpl.parse_feed(atom_content).is_err());
     }
 }

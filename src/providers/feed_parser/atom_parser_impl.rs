@@ -1,23 +1,21 @@
-use std::io::BufReader;
-
+use crate::models::parsed_feed::ParsedItem;
+use anyhow::anyhow;
 use atom_syndication::Feed;
 use chrono::Utc;
+use std::io::BufReader;
 
-use super::error::{FeedParserError, Result};
-use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
+use crate::models::parsed_feed::ParsedFeed;
+
+use super::error::FeedParserError;
+use super::feed_parser_trait::FeedParser;
+use super::Result;
 
 pub struct AtomParserImpl;
-
-impl AtomParserImpl {
-    pub fn new() -> Self {
-        Self
-    }
-}
 
 impl FeedParser for AtomParserImpl {
     fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed> {
         let reader = BufReader::new(content);
-        let feed = Feed::read_from(reader)?;
+        let feed = Feed::read_from(reader).map_err(|e| FeedParserError::ParseError(anyhow!(e)))?;
 
         // Find the alternate link (usually the website URL)
         let link = feed
@@ -25,7 +23,7 @@ impl FeedParser for AtomParserImpl {
             .iter()
             .find(|link| link.rel() == "alternate" || link.rel() == "self")
             .map(|link| link.href().to_owned())
-            .ok_or_else(|| FeedParserError::MissingField("link".to_owned()))?;
+            .ok_or_else(|| FeedParserError::MissingField("link"))?;
 
         let items = feed
             .entries()
@@ -41,8 +39,7 @@ impl FeedParser for AtomParserImpl {
                 // Get content or summary
                 let content = entry
                     .content()
-                    .and_then(|c| c.value.as_ref().map(|v| v.to_owned()))
-                    .or_else(|| entry.summary().map(|s| s.value.to_owned()));
+                    .and_then(|c| c.value.as_ref().map(|v| v.to_owned()));
 
                 // Get author name if available
                 let author = entry.authors().first().map(|a| a.name().to_owned());
@@ -63,12 +60,6 @@ impl FeedParser for AtomParserImpl {
             link,
             items,
         })
-    }
-
-    fn can_parse(&self, content: &[u8]) -> bool {
-        // Check if content looks like Atom by trying to parse it
-        let reader = BufReader::new(content);
-        Feed::read_from(reader).is_ok()
     }
 }
 
@@ -92,10 +83,10 @@ mod tests {
                 <updated>2023-01-01T12:00:00Z</updated>
             </entry>
         </feed>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = AtomParserImpl::new();
-        assert!(parser.can_parse(atom_content));
+        assert!(AtomParserImpl.parse_feed(atom_content).is_ok());
     }
 
     #[test]
@@ -115,9 +106,9 @@ mod tests {
                 </item>
             </channel>
         </rss>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = AtomParserImpl::new();
-        assert!(!parser.can_parse(rss_content));
+        assert!(AtomParserImpl.parse_feed(rss_content).is_err());
     }
 }
