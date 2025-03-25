@@ -1,17 +1,18 @@
-use std::io::BufReader;
-
+use anyhow::anyhow;
 use atom_syndication::Feed;
 use chrono::Utc;
+use std::io::BufReader;
 
-use super::error::{FeedParserError, Result};
+use super::error::FeedParserError;
 use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
+use super::Result;
 
 pub struct AtomParserImpl;
 
 impl FeedParser for AtomParserImpl {
     fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed> {
         let reader = BufReader::new(content);
-        let feed = Feed::read_from(reader)?;
+        let feed = Feed::read_from(reader).map_err(|e| FeedParserError::ParseError(anyhow!(e)))?;
 
         // Find the alternate link (usually the website URL)
         let link = feed
@@ -19,7 +20,7 @@ impl FeedParser for AtomParserImpl {
             .iter()
             .find(|link| link.rel() == "alternate" || link.rel() == "self")
             .map(|link| link.href().to_owned())
-            .ok_or_else(|| FeedParserError::MissingField("link".to_owned()))?;
+            .ok_or_else(|| FeedParserError::MissingField("link"))?;
 
         let items = feed
             .entries()

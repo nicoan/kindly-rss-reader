@@ -1,6 +1,5 @@
+use super::Result;
 use chrono::{DateTime, Utc};
-
-use super::error::Result;
 
 /// Common structure representing parsed feed data
 #[derive(Debug, Clone)]

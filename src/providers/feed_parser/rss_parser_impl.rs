@@ -1,10 +1,10 @@
-use std::io::BufReader;
-
+use super::error::FeedParserError;
+use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
+use super::Result;
+use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use rss::Channel;
-
-use super::error::{FeedParserError, Result};
-use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
+use std::io::BufReader;
 
 pub struct RssParserImpl;
 
@@ -20,7 +20,8 @@ impl RssParserImpl {
 impl FeedParser for RssParserImpl {
     fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed> {
         let reader = BufReader::new(content);
-        let channel = Channel::read_from(reader)?;
+        let channel =
+            Channel::read_from(reader).map_err(|e| FeedParserError::ParseError(anyhow!(e)))?;
 
         let items = channel
             .items()

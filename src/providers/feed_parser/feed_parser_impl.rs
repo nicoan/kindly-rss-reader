@@ -1,7 +1,7 @@
 use super::atom_parser_impl::AtomParserImpl;
-use super::error::Result;
 use super::feed_parser_trait::{FeedParser, ParsedFeed};
 use super::rss_parser_impl::RssParserImpl;
+use super::Result;
 
 pub struct FeedParserImpl {
     rss_parser: RssParserImpl,
