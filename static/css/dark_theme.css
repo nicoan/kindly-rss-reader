@@ -10,6 +10,11 @@ p, h1, h2, h3, h4, h5, h6, sub, ol, li, code {
     color: white;
 }
 
+/* invert image colors in dark theme */
+img {
+   filter: invert(1);
+}
+
 a {
     color: gray;
     text-decoration: none;

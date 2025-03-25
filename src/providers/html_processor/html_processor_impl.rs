@@ -24,10 +24,8 @@ impl HtmlProcessorImpl {
                 r"(?si)<iframe.*?(</iframe>|/>)|<script.*?(</script>|/>)",
             )
             .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
-            attr_removal_regex: Regex::new(
-                r#"(?i)\b(on\w+|javascript:|data:)[^"'<>]*=['"][^"']*['"]"#,
-            )
-            .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
+            attr_removal_regex: Regex::new(r#"(?i)\b(on\w+|javascript:)[^"'<>]*=['"][^"']*['"]"#)
+                .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
             favicon_url: regex::Regex::new(
                 r#"(?i)<link[^>]*rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']"#,
             )
@@ -96,6 +94,12 @@ impl HtmlProcessor for HtmlProcessorImpl {
             // Get the original <img> tag and src value
             let full_tag = &cap[0];
             let src_value = &cap[1];
+
+            if src_value.starts_with("data:image") || src_value.starts_with("/data:image") {
+                fixed_html.push_str(full_tag);
+                last_pos = mat.end();
+                continue;
+            }
 
             let image_url = if src_value.starts_with("http://") || src_value.starts_with("https://")
             {
