@@ -3,6 +3,7 @@ use super::FeedService;
 use super::Result;
 use crate::config::Config;
 use crate::models::article::Article;
+use crate::providers::feed_parser::{FeedParser, ParsedItem};
 use crate::providers::html_processor::HtmlProcessor;
 use crate::providers::image_processor::ImageProcessor;
 use crate::providers::image_processor::ImageProcessorFsImpl;
@@ -14,7 +15,6 @@ use chrono::DateTime;
 use chrono::TimeDelta;
 use chrono::Utc;
 use reqwest::Url;
-use rss::Item;
 use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::task::JoinSet;
@@ -22,29 +22,33 @@ use uuid::Uuid;
 
 type ArticleContent = String;
 
-pub struct FeedServiceImpl<FR, FCR, HP>
+pub struct FeedServiceImpl<FR, FCR, HP, FP>
 where
     FR: FeedRepository,
     FCR: FeedContentRepository,
     HP: HtmlProcessor + 'static,
+    FP: FeedParser + 'static,
 {
     feed_repository: Arc<FR>,
     feed_content_repository: Arc<FCR>,
     html_processor: Arc<HP>,
+    feed_parser: Arc<FP>,
     config: Arc<Config>,
     articles_router_path: &'static str,
 }
 
-impl<FR, FCR, HP> FeedServiceImpl<FR, FCR, HP>
+impl<FR, FCR, HP, FP> FeedServiceImpl<FR, FCR, HP, FP>
 where
     FR: FeedRepository,
     FCR: FeedContentRepository,
     HP: HtmlProcessor + 'static,
+    FP: FeedParser + 'static,
 {
     pub fn new(
         feed_repository: Arc<FR>,
         feed_content_repository: Arc<FCR>,
         html_processor: Arc<HP>,
+        feed_parser: Arc<FP>,
         config: Arc<Config>,
         articles_router_path: &'static str,
     ) -> Self {
@@ -52,6 +56,7 @@ where
             feed_repository,
             feed_content_repository,
             html_processor,
+            feed_parser,
             config,
             articles_router_path,
         }
@@ -114,21 +119,21 @@ where
             .map_err(|e| FeedServiceError::Unexpected(e.into()))
     }
 
-    /// This function process an RSS and adds it to the feed's article list.
+    /// This function processes a feed item and adds it to the feed's article list.
     ///
     /// If `download_content` is `true`, then the article is downloaded and processed, otherwise,
     /// it is only added to the list
-    async fn process_rss_article(
+    async fn process_parsed_item(
         download_content: bool,
         image_processor: Arc<impl ImageProcessor>,
         html_processor: Arc<HP>,
         feed_id: Uuid,
         feed_link: Arc<String>,
-        article: rss::Item,
+        item: ParsedItem,
     ) -> Result<(Article, Option<ArticleContent>)> {
         let article_id = Uuid::new_v4();
 
-        let article_link = article.link().map(|link| link.to_owned()).ok_or_else(|| {
+        let article_link = item.link.clone().ok_or_else(|| {
             FeedServiceError::Unexpected(anyhow::anyhow!(
                 "an article for the feed {} does not have a link",
                 feed_id
@@ -136,10 +141,10 @@ where
         })?;
 
         // If the items have content, we cache it in the fs
-        let (html_parsed, content) = if let Some(content) = article.content() {
-            (false, Some(content.to_owned()))
+        let (html_parsed, content) = if let Some(content) = item.content {
+            (false, Some(content))
         }
-        // Otherwise we follow the linka and download the html
+        // Otherwise we follow the link and download the html
         else if download_content {
             let article = Self::download_html_article(&article_link).await?;
             (true, Some(article))
@@ -168,30 +173,21 @@ where
             None
         };
 
-        let date = if let Some(date) = &article.pub_date {
-            DateTime::parse_from_rfc2822(date)
-                .map_err(|e| FeedServiceError::ParsingDate(article_link.clone(), e))?
-                .with_timezone(&Utc)
-        } else {
-            Utc::now()
-        };
+        let date = item.pub_date.unwrap_or_else(Utc::now);
 
         Ok((
             Article {
                 id: article_id,
                 feed_id,
-                title: article
-                    .title
-                    .clone()
-                    .unwrap_or_else(|| "Unknown title".to_owned()),
+                title: item.title,
                 link: article_link,
-                guid: article.guid().map(|id| id.value.clone()).ok_or_else(|| {
+                guid: item.guid.ok_or_else(|| {
                     FeedServiceError::Unexpected(anyhow::anyhow!(
                         "an article for the feed {} does not have a guid",
                         feed_id
                     ))
                 })?,
-                author: article.author,
+                author: item.author,
                 html_parsed,
                 content: None,
                 read: false,
@@ -215,11 +211,12 @@ where
 }
 
 #[async_trait]
-impl<FR, FCR, HP> FeedService for FeedServiceImpl<FR, FCR, HP>
+impl<FR, FCR, HP, FP> FeedService for FeedServiceImpl<FR, FCR, HP, FP>
 where
     FR: FeedRepository + 'static,
     FCR: FeedContentRepository + 'static,
     HP: HtmlProcessor,
+    FP: FeedParser + 'static,
 {
     async fn get_feed_list(&self) -> Result<Vec<Feed>> {
         Ok(self.feed_repository.get_feed_list().await?)
@@ -232,7 +229,7 @@ where
     async fn add_feed(&self, feed_url: Url) -> Result<()> {
         let content = Self::download_feed_content(feed_url.as_str()).await?;
 
-        let rss_channel = rss::Channel::read_from(&content[..])
+        let parsed_feed = self.feed_parser.parse_feed(&content)
             .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
 
         let link_path = feed_url.path_segments();
@@ -250,7 +247,7 @@ where
 
         let feed = Feed {
             id: Uuid::new_v4(),
-            title: rss_channel.title,
+            title: parsed_feed.title,
             link,
             url: feed_url.into(),
             favicon_url: None,
@@ -270,7 +267,7 @@ where
                 > TimeDelta::minutes(self.config.minutes_to_check_for_updates.into())
             {
                 let content = Self::download_feed_content(feed.url.as_str()).await?;
-                let rss_channel = rss::Channel::read_from(&content[..])
+                let parsed_feed = self.feed_parser.parse_feed(&content)
                     .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
 
                 // First we check with the channel and the database if any of the articles is new
@@ -281,16 +278,16 @@ where
                     .map(|article| &*article.guid)
                     .collect();
 
-                let channel_items: Vec<Item> = rss_channel
+                let new_items: Vec<ParsedItem> = parsed_feed
                     .items
                     .into_iter()
                     .filter(|item| {
-                        if let Some(guid) = &item.guid().map(|g| g.value()) {
-                            !articles_guid.contains(guid)
+                        if let Some(guid) = &item.guid {
+                            !articles_guid.contains(guid.as_str())
                         // We filter by link because if guid is not found, we identify the article
                         // by its link
-                        } else if let Some(link) = &item.link() {
-                            !articles_guid.contains(link)
+                        } else if let Some(link) = &item.link {
+                            !articles_guid.contains(link.as_str())
                         } else {
                             tracing::warn!(
                                 r#"found an article for feed {} with id "{}" with no guid or link"#,
@@ -302,7 +299,7 @@ where
                     })
                     .collect();
 
-                if channel_items.is_empty() {
+                if new_items.is_empty() {
                     self.feed_repository
                         .update_last_updated(feed_id, Utc::now())
                         .await?;
@@ -318,9 +315,9 @@ where
 
                 // TODO: We are assuming the channel items are sorted by pub date desc
 
-                // Create the articles from the channel items
+                // Create the articles from the parsed items
                 let mut processed_html_articles = 0;
-                for article in channel_items {
+                for item in new_items {
                     let feed_link = feed_link.clone();
                     let img_processor = image_processor.clone();
                     let html_processor = self.html_processor.clone();
@@ -328,7 +325,7 @@ where
                     // If it is an HTML article, we add one to the counter
                     // If content exist then we process it anyway because we already donwloaded
                     // it... otherwise we only process it if we processed less than config.max_articles_qty_to_download
-                    if article.content().is_none() {
+                    if item.content.is_none() {
                         processed_html_articles += 1;
                     }
 
@@ -340,13 +337,13 @@ where
                         };
 
                     //  Start a task to process the article
-                    join_set.spawn(Self::process_rss_article(
+                    join_set.spawn(Self::process_parsed_item(
                         download_content,
                         img_processor,
                         html_processor,
                         feed_id,
                         feed_link,
-                        article,
+                        item,
                     ));
                 }
 

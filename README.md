@@ -3,18 +3,18 @@
   <img src="images/logo_light.png#gh-light-mode-only" alt="Logo">
   <img src="images/logo_dark.png#gh-dark-mode-only" alt="Logo">
   <br>
-  <strong>RSS Aggregator for e-ink devices</strong>
+  <strong>Feed Aggregator for e-ink devices</strong>
 </p>
 
 
-Kindly RSS Reader is a self-hosted RSS aggregator designed for e-ink devices such as Kindle and optimized for low-end computers like the Raspberry Pi.
+Kindly RSS Reader is a self-hosted feed aggregator (supporting both RSS and Atom feeds) designed for e-ink devices such as Kindle and optimized for low-end computers like the Raspberry Pi.
 
 Feel free to test it, report issues, or contribute by submitting pull requests with new features.
 
 > **Note:** This project is in its early development stages.
 
 ## Features
-- Fetch and aggregate RSS feeds.
+- Fetch and aggregate RSS and Atom feeds.
 - Optimized for e-ink display readability.
 - Self-hostable on low-end hardware.
 

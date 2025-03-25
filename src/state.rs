@@ -1,6 +1,10 @@
 use crate::{
     config::Config,
-    providers::{html_processor::HtmlProcessorImpl, persisted_config::PersistedConfigProviderImpl},
+    providers::{
+        feed_parser::FeedParserImpl,
+        html_processor::HtmlProcessorImpl,
+        persisted_config::PersistedConfigProviderImpl,
+    },
     repositories::{
         feed_content::FeedContentFsRepositoryImpl,
         persisted_config::{
@@ -28,8 +32,14 @@ use crate::{
 pub struct State {
     pub template_service: Arc<TemplateServiceImpl<'static, PersistedConfigProviderImpl>>,
 
-    pub feed_service:
-        Arc<FeedServiceImpl<FeedRepositoryImpl, FeedContentFsRepositoryImpl, HtmlProcessorImpl>>,
+    pub feed_service: Arc<
+        FeedServiceImpl<
+            FeedRepositoryImpl,
+            FeedContentFsRepositoryImpl,
+            HtmlProcessorImpl,
+            FeedParserImpl,
+        >,
+    >,
 
     pub persisted_config_service: Arc<
         PersistedConfigServiceImpl<PersistedConfigFsRepositoryImpl, PersistedConfigProviderImpl>,
@@ -65,6 +75,7 @@ impl State {
         // Initialize providers
         let html_processor_provider =
             Arc::new(HtmlProcessorImpl::new().expect("unable to initialize html processor"));
+        let feed_parser_provider = Arc::new(FeedParserImpl::new());
 
         let persisted_config = persisted_config_repository.load_configuration().await;
         let persisted_config_provider =
@@ -83,6 +94,7 @@ impl State {
             feed_repository,
             feed_content_repository,
             html_processor_provider,
+            feed_parser_provider,
             config,
             ARTICLES_DIR,
         ));
@@ -102,7 +114,12 @@ impl State {
 
 impl AppState for State {
     type TS = TemplateServiceImpl<'static, PersistedConfigProviderImpl>;
-    type FS = FeedServiceImpl<FeedRepositoryImpl, FeedContentFsRepositoryImpl, HtmlProcessorImpl>;
+    type FS = FeedServiceImpl<
+        FeedRepositoryImpl,
+        FeedContentFsRepositoryImpl,
+        HtmlProcessorImpl,
+        FeedParserImpl,
+    >;
     type PCS =
         PersistedConfigServiceImpl<PersistedConfigFsRepositoryImpl, PersistedConfigProviderImpl>;
 
