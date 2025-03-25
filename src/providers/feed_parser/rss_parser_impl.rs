@@ -1,8 +1,5 @@
+use super::{error::FeedParserError, FeedParser, Result};
 use crate::models::parsed_feed::{ParsedFeed, ParsedItem};
-
-use super::error::FeedParserError;
-use super::feed_parser_trait::FeedParser;
-use super::Result;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
 use rss::Channel;
