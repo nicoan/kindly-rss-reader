@@ -582,6 +582,7 @@ name = "kindle-rss-reader"
 version = "0.3.1"
 dependencies = [
  "anyhow",
+ "atom_syndication",
  "axum",
  "axum_static",
  "chrono",

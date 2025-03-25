@@ -8,12 +8,6 @@ use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
 
 pub struct AtomParserImpl;
 
-impl AtomParserImpl {
-    pub fn new() -> Self {
-        Self
-    }
-}
-
 impl FeedParser for AtomParserImpl {
     fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed> {
         let reader = BufReader::new(content);
@@ -64,12 +58,6 @@ impl FeedParser for AtomParserImpl {
             items,
         })
     }
-
-    fn can_parse(&self, content: &[u8]) -> bool {
-        // Check if content looks like Atom by trying to parse it
-        let reader = BufReader::new(content);
-        Feed::read_from(reader).is_ok()
-    }
 }
 
 #[cfg(test)]
@@ -92,10 +80,10 @@ mod tests {
                 <updated>2023-01-01T12:00:00Z</updated>
             </entry>
         </feed>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = AtomParserImpl::new();
-        assert!(parser.can_parse(atom_content));
+        assert!(AtomParserImpl.parse_feed(atom_content).is_ok());
     }
 
     #[test]
@@ -115,9 +103,9 @@ mod tests {
                 </item>
             </channel>
         </rss>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = AtomParserImpl::new();
-        assert!(!parser.can_parse(rss_content));
+        assert!(AtomParserImpl.parse_feed(rss_content).is_err());
     }
 }

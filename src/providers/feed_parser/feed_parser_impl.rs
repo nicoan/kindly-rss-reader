@@ -1,38 +1,31 @@
-use std::sync::Arc;
-
 use super::atom_parser_impl::AtomParserImpl;
 use super::error::Result;
 use super::feed_parser_trait::{FeedParser, ParsedFeed};
 use super::rss_parser_impl::RssParserImpl;
 
-/// Factory implementation that selects the appropriate parser based on the feed content
 pub struct FeedParserImpl {
-    rss_parser: Arc<RssParserImpl>,
-    atom_parser: Arc<AtomParserImpl>,
+    rss_parser: RssParserImpl,
+    atom_parser: AtomParserImpl,
 }
 
-impl FeedParserImpl {
-    pub fn new() -> Self {
+impl Default for FeedParserImpl {
+    fn default() -> Self {
         Self {
-            rss_parser: Arc::new(RssParserImpl::new()),
-            atom_parser: Arc::new(AtomParserImpl::new()),
+            rss_parser: RssParserImpl,
+            atom_parser: AtomParserImpl,
         }
     }
 }
 
 impl FeedParser for FeedParserImpl {
     fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed> {
-        if self.rss_parser.can_parse(content) {
-            self.rss_parser.parse_feed(content)
-        } else if self.atom_parser.can_parse(content) {
-            self.atom_parser.parse_feed(content)
+        if let Ok(parsed_feed) = self.rss_parser.parse_feed(content) {
+            Ok(parsed_feed)
+        } else if let Ok(parsed_feed) = self.atom_parser.parse_feed(content) {
+            Ok(parsed_feed)
         } else {
             Err(super::error::FeedParserError::UnsupportedFormat)
         }
-    }
-
-    fn can_parse(&self, content: &[u8]) -> bool {
-        self.rss_parser.can_parse(content) || self.atom_parser.can_parse(content)
     }
 }
 
@@ -57,10 +50,11 @@ mod tests {
                 </item>
             </channel>
         </rss>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = FeedParserImpl::new();
-        assert!(parser.can_parse(rss_content));
+        let parser = FeedParserImpl::default();
+        assert!(parser.parse_feed(rss_content).is_ok());
     }
 
     #[test]
@@ -79,16 +73,17 @@ mod tests {
                 <updated>2023-01-01T12:00:00Z</updated>
             </entry>
         </feed>
-        "#.as_bytes();
+        "#
+        .as_bytes();
 
-        let parser = FeedParserImpl::new();
-        assert!(parser.can_parse(atom_content));
+        let parser = FeedParserImpl::default();
+        assert!(parser.parse_feed(atom_content).is_ok());
     }
 
     #[test]
     fn test_cannot_parse_invalid_content() {
         let invalid_content = b"This is not a valid feed";
-        let parser = FeedParserImpl::new();
-        assert!(!parser.can_parse(invalid_content));
+        let parser = FeedParserImpl::default();
+        assert!(parser.parse_feed(invalid_content).is_err());
     }
 }

@@ -1,8 +1,7 @@
 use crate::{
     config::Config,
     providers::{
-        feed_parser::FeedParserImpl,
-        html_processor::HtmlProcessorImpl,
+        feed_parser::FeedParserImpl, html_processor::HtmlProcessorImpl,
         persisted_config::PersistedConfigProviderImpl,
     },
     repositories::{
@@ -75,7 +74,7 @@ impl State {
         // Initialize providers
         let html_processor_provider =
             Arc::new(HtmlProcessorImpl::new().expect("unable to initialize html processor"));
-        let feed_parser_provider = Arc::new(FeedParserImpl::new());
+        let feed_parser_provider = Arc::new(FeedParserImpl::default());
 
         let persisted_config = persisted_config_repository.load_configuration().await;
         let persisted_config_provider =

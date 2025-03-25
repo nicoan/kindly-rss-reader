@@ -25,7 +25,4 @@ pub struct ParsedItem {
 pub trait FeedParser: Send + Sync {
     /// Parse feed content and return feed metadata
     fn parse_feed(&self, content: &[u8]) -> Result<ParsedFeed>;
-    
-    /// Check if this parser can handle the given content
-    fn can_parse(&self, content: &[u8]) -> bool;
 }
