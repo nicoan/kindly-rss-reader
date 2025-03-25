@@ -1,7 +1,8 @@
 use crate::{
     config::Config,
     providers::{
-        feed_parser::FeedParserImpl, html_processor::HtmlProcessorImpl,
+        feed_parser::{AtomParserImpl, RssParserImpl},
+        html_processor::HtmlProcessorImpl,
         persisted_config::PersistedConfigProviderImpl,
     },
     repositories::{
@@ -36,7 +37,8 @@ pub struct State {
             FeedRepositoryImpl,
             FeedContentFsRepositoryImpl,
             HtmlProcessorImpl,
-            FeedParserImpl,
+            RssParserImpl,
+            AtomParserImpl,
         >,
     >,
 
@@ -74,7 +76,8 @@ impl State {
         // Initialize providers
         let html_processor_provider =
             Arc::new(HtmlProcessorImpl::new().expect("unable to initialize html processor"));
-        let feed_parser_provider = Arc::new(FeedParserImpl::default());
+        let rss_parser_provider = Arc::new(RssParserImpl);
+        let atom_parser_provider = Arc::new(AtomParserImpl);
 
         let persisted_config = persisted_config_repository.load_configuration().await;
         let persisted_config_provider =
@@ -93,7 +96,8 @@ impl State {
             feed_repository,
             feed_content_repository,
             html_processor_provider,
-            feed_parser_provider,
+            rss_parser_provider,
+            atom_parser_provider,
             config,
             ARTICLES_DIR,
         ));
@@ -117,7 +121,8 @@ impl AppState for State {
         FeedRepositoryImpl,
         FeedContentFsRepositoryImpl,
         HtmlProcessorImpl,
-        FeedParserImpl,
+        RssParserImpl,
+        AtomParserImpl,
     >;
     type PCS =
         PersistedConfigServiceImpl<PersistedConfigFsRepositoryImpl, PersistedConfigProviderImpl>;

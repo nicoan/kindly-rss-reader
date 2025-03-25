@@ -5,9 +5,6 @@ pub enum FeedParserError {
     #[error("Failed to parse feed: {0}")]
     ParseError(#[source] anyhow::Error),
 
-    #[error("Unsupported feed format")]
-    UnsupportedFormat,
-
     #[error("Missing required field: {0}")]
     MissingField(&'static str),
 

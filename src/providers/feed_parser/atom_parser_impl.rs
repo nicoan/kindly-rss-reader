@@ -1,10 +1,13 @@
+use crate::models::parsed_feed::ParsedItem;
 use anyhow::anyhow;
 use atom_syndication::Feed;
 use chrono::Utc;
 use std::io::BufReader;
 
+use crate::models::parsed_feed::ParsedFeed;
+
 use super::error::FeedParserError;
-use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
+use super::feed_parser_trait::FeedParser;
 use super::Result;
 
 pub struct AtomParserImpl;

@@ -1,5 +1,7 @@
+use crate::models::parsed_feed::{ParsedFeed, ParsedItem};
+
 use super::error::FeedParserError;
-use super::feed_parser_trait::{FeedParser, ParsedFeed, ParsedItem};
+use super::feed_parser_trait::FeedParser;
 use super::Result;
 use anyhow::anyhow;
 use chrono::{DateTime, Utc};
