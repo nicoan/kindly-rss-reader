@@ -50,44 +50,23 @@ The following environment variables are used to configure some aspects of the ap
 
 ### Docker
 
-#### Using curl
-
-You can just execute this command:
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/nicoan/kindly-rss-reader/refs/heads/main/install_docker.sh | sh
-```
-
-#### Manually
-
 At the moment only a docker image is supported. To run the project:
 
-1. Make a new directory to save the container data:
-    ```bash
-    mkdir -p ./kindly-rss-data/data
-    ```
+```bash
+docker run \
+    -d \
+    -p 3000:3000 \
+    --restart unless-stopped \
+    -v "$(pwd)/kindly-rss-data/data:/home/data" \
+    --name kindly-rss \
+    nicoan/kindly-rss-reader
+```
 
-    This directory will be used as volume to persist the the app data in the host. This is useful for not losing data when running a new docker image containing a new version of the app.
+The argument `--restart unless-stopped` will strart the container automatically when the docker daemon stats, unless it is stopped.
 
-2. Pull the latest docker image:
-    ```bash
-    docker pull nicoan/kindly-rss-reader
-    ```
+**Note**: If you wish to modify some enviroment variable value, add `-e VAR_NAME=<value>` to the `docker run ...` command.
 
-3. Run the docker image:
-    ```bash
-    docker run \
-        -d \
-        -p 3000:3000 \
-        -v "$(pwd)/kindly-rss-data/data:/home/data" \
-        --name kindly-rss \
-        nicoan/kindly-rss-reader
-    ```
-
-    **Note**: If you wish to modify some enviroment variable value, add `-e VAR_NAME=<value>` to the `docker run ...` command.
-
-4. Open your browser and navigate to the app with the address `http:://<ip_of_device_running_the_docker_image>:3000`. I *highly* recommend to add feeds from a computer.
-
-5. Enjoy :).
+Then open your browser and navigate to the app with the address `http:://<ip_of_device_running_the_docker_image>:3000`. I *highly* recommend to add feeds from a computer.
 
 ## Running the Project for development
 
