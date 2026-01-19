@@ -40,9 +40,14 @@ impl FeedParser for RssParserImpl {
             .collect();
 
         let link = channel.link().to_owned();
+        let channel_title = if channel.title().is_empty() {
+            &link
+        } else {
+            channel.title()
+        };
 
         Ok(ParsedFeed {
-            title: channel.title().to_owned(),
+            title: channel_title.to_owned(),
             link,
             items,
         })

@@ -4,6 +4,7 @@ use crate::providers::image_processor::ImageProcessor;
 use super::{error::HtmlProcessorError, Result};
 use axum::async_trait;
 use regex::Regex;
+use scraper::{Html, Selector};
 
 use super::HtmlProcessor;
 
@@ -32,47 +33,54 @@ impl HtmlProcessorImpl {
             .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?,
         })
     }
-
-    fn extract_content_between_tag(html: &str, tag: &str) -> Result<Option<String>> {
-        // let start_tag = "<main";
-        let start_tag = Regex::new(&format!(r"(?i)<\s*{tag}[^>]*>"))
-            .map_err(|e| HtmlProcessorError::Unexpected(e.into()))?;
-        let end_tag = &format!("</{tag}>");
-
-        let start_tag = if let Some(st) = start_tag.find(html) {
-            st
-        } else {
-            return Ok(None);
-        };
-
-        // Locate the start and end positions of the <article> content
-        if let Some(end_idx) = html.find(end_tag) {
-            // Extract the content between the <main> tags
-            let start = start_tag.end();
-            let article_content = &html[start..end_idx];
-            return Ok(Some(article_content.to_string()));
-        }
-
-        Ok(None)
-    }
 }
 
 #[async_trait]
 impl HtmlProcessor for HtmlProcessorImpl {
     fn process_html_article(&self, html: &str) -> Result<String> {
-        let content = Self::extract_content_between_tag(html, "main")?;
-        if let Some(content) = content {
-            return Ok(content);
+        let fragment = Html::parse_fragment(html);
+
+        let selector = Selector::parse("main").unwrap();
+        let main = fragment.select(&selector);
+
+        // Plain <main>
+        for element in main.into_iter() {
+            if element.has_children() {
+                return Ok(element.html());
+            }
         }
 
-        let content = Self::extract_content_between_tag(html, "article")?;
-        if let Some(content) = content {
-            return Ok(content);
+        // Plain <article>
+        let selector = Selector::parse("article").unwrap();
+        let articles = fragment.select(&selector);
+        for article in articles.into_iter() {
+            if article.has_children() {
+                return Ok(article.html());
+            }
+        }
+
+        // <div role="main">
+        let selector = Selector::parse(r#"div[role="main"]"#).unwrap();
+        let divs = fragment.select(&selector);
+        for div in divs.into_iter() {
+            if div.has_children() {
+                return Ok(div.html());
+            }
+        }
+
+        // <div role="article">
+        let selector = Selector::parse(r#"div[role="article"]"#).unwrap();
+        let divs = fragment.select(&selector);
+        for div in divs.into_iter() {
+            if div.has_children() {
+                return Ok(div.html());
+            }
         }
 
         Err(HtmlProcessorError::UnableToParse)
     }
 
+    // TODO: use scraper for this
     async fn fix_img_src<P>(&self, html: &str, link: &str, image_processor: &P) -> Result<String>
     where
         P: ImageProcessor + ?Sized,

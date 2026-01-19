@@ -61,7 +61,7 @@ impl Config {
     }
 
     fn max_articles_qty_to_download() -> Option<u8> {
-        None
+        Some(0)
     }
 
     fn minutes_to_check_for_updates() -> u16 {

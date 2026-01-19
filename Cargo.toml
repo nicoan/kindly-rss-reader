@@ -1,6 +1,6 @@
 [package]
 name = "kindle-rss-reader"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 
 [dependencies]
@@ -14,6 +14,7 @@ minijinja = { version = "2.0.2", features = ["loader"] }
 regex = "1.11.1"
 reqwest = { version = "0.12.5", default-features = false, features=["rustls-tls"] }
 rss = "2.0.8"
+scraper = "0.25.0"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.138"
 sqlite = "0.36.1"
