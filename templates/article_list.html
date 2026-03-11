@@ -6,7 +6,14 @@
         <main class="main">
             <div class="content">
                 <div id="header" class="section-header">
-                    <h1> {{ context.feed.title }} </h1>
+                    <div style="display: flex; align-items: center;">
+                        {% if context.feed.favicon_url %}
+                            <img src="{{ context.feed.favicon_url }}" width="24" height="24" style="margin-right: 10px; border-radius: 3px;" />
+                        {% else %}
+                            <img src="/static/images/default_favicon.png" width="24" height="24" style="margin-right: 10px; border-radius: 3px; opacity: 0.5;" />
+                        {% endif %}
+                        <h1> {{ context.feed.title }} </h1>
+                    </div>
                     <div class="section-header-buttons">
                         <a href="#" id="confirmDeletion" onclick="showDialog();">
                             <i class="fa fa-trash button" aria-hidden="true"></i>

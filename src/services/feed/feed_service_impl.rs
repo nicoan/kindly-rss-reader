@@ -5,6 +5,7 @@ use crate::config::Config;
 use crate::models::article::Article;
 use crate::models::parsed_feed::ParsedFeed;
 use crate::models::parsed_feed::ParsedItem;
+use crate::providers::favicon::FaviconProvider;
 use crate::providers::feed_parser::FeedParser;
 use crate::providers::html_processor::HtmlProcessor;
 use crate::providers::image_processor::ImageProcessor;
@@ -24,30 +25,33 @@ use uuid::Uuid;
 
 type ArticleContent = String;
 
-pub struct FeedServiceImpl<FR, FCR, HP, FRP, FAP>
+pub struct FeedServiceImpl<FR, FCR, HP, FRP, FAP, FVP>
 where
     FR: FeedRepository,
     FCR: FeedContentRepository,
     HP: HtmlProcessor + 'static,
     FRP: FeedParser + 'static,
     FAP: FeedParser + 'static,
+    FVP: FaviconProvider + 'static,
 {
     feed_repository: Arc<FR>,
     feed_content_repository: Arc<FCR>,
     html_processor: Arc<HP>,
     atom_parser: Arc<FRP>,
     rss_parser: Arc<FAP>,
+    favicon_provider: Arc<FVP>,
     config: Arc<Config>,
     articles_router_path: &'static str,
 }
 
-impl<FR, FCR, HP, FRP, FAP> FeedServiceImpl<FR, FCR, HP, FRP, FAP>
+impl<FR, FCR, HP, FRP, FAP, FVP> FeedServiceImpl<FR, FCR, HP, FRP, FAP, FVP>
 where
     FR: FeedRepository,
     FCR: FeedContentRepository,
     HP: HtmlProcessor + 'static,
     FRP: FeedParser + 'static,
     FAP: FeedParser + 'static,
+    FVP: FaviconProvider + 'static,
 {
     pub fn new(
         feed_repository: Arc<FR>,
@@ -55,6 +59,7 @@ where
         html_processor: Arc<HP>,
         atom_parser: Arc<FRP>,
         rss_parser: Arc<FAP>,
+        favicon_provider: Arc<FVP>,
         config: Arc<Config>,
         articles_router_path: &'static str,
     ) -> Self {
@@ -64,6 +69,7 @@ where
             html_processor,
             atom_parser,
             rss_parser,
+            favicon_provider,
             config,
             articles_router_path,
         }
@@ -228,13 +234,14 @@ where
 }
 
 #[async_trait]
-impl<FR, FCR, HP, FRP, FAP> FeedService for FeedServiceImpl<FR, FCR, HP, FRP, FAP>
+impl<FR, FCR, HP, FRP, FAP, FVP> FeedService for FeedServiceImpl<FR, FCR, HP, FRP, FAP, FVP>
 where
     FR: FeedRepository + 'static,
     FCR: FeedContentRepository + 'static,
     HP: HtmlProcessor,
     FRP: FeedParser + 'static,
     FAP: FeedParser + 'static,
+    FVP: FaviconProvider + 'static,
 {
     async fn get_feed_list(&self) -> Result<Vec<Feed>> {
         Ok(self.feed_repository.get_feed_list().await?)
@@ -262,12 +269,20 @@ where
             feed_url.origin().unicode_serialization()
         };
 
+        let feed_id = Uuid::new_v4();
+        
+        let favicon_url = self.favicon_provider
+            .download_favicon(&link, feed_id.to_string().as_str())
+            .await
+            .ok()
+            .flatten();
+
         let feed = Feed {
-            id: Uuid::new_v4(),
+            id: feed_id,
             title: parsed_feed.title,
             link,
             url: feed_url.into(),
-            favicon_url: None,
+            favicon_url,
             last_updated: DateTime::default(),
             unread_count: 0,
         };

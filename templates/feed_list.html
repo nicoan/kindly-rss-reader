@@ -22,8 +22,15 @@
                 <div id="body" class="list">
                     {% for feed in context.feeds %}
                         <a href="feed/{{ feed.id }}">
-                            <div style="display: flex; justify-content: space-between; padding: 0 5px;">
-                                <h3>{{ feed.title }}</h3>
+                            <div style="display: flex; justify-content: space-between; padding: 0 5px; align-items: center;">
+                                <div style="display: flex; align-items: center;">
+                                    {% if feed.favicon_url %}
+                                        <img src="{{ feed.favicon_url }}" width="20" height="20" style="margin-right: 10px; border-radius: 3px;" />
+                                    {% else %}
+                                        <img src="/static/images/default_favicon.png" width="20" height="20" style="margin-right: 10px; border-radius: 3px; opacity: 0.5;" />
+                                    {% endif %}
+                                    <h3>{{ feed.title }}</h3>
+                                </div>
                                 <div>
                                     {% if feed.unread_count > 0 %}
                                         <span class="unread-count">{{ feed.unread_count }}</span>

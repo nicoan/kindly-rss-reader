@@ -58,15 +58,16 @@ impl FeedRepository for FeedRepositoryImpl {
         transaction!(self, {
             let mut stmt = self.connection.prepare(
                 r#"
-                    INSERT INTO feed (id, title, url, link, last_updated)
-                    VALUES (?, ?, ?, ?, ?);
+                    INSERT INTO feed (id, title, url, link, favicon_path, last_updated)
+                    VALUES (?, ?, ?, ?, ?, ?);
                 "#,
             )?;
             stmt.bind((1, feed.id.to_string().as_str()))?;
             stmt.bind((2, feed.title.as_str()))?;
             stmt.bind((3, feed.url.as_str()))?;
             stmt.bind((4, feed.link.as_str()))?;
-            stmt.bind((5, feed.last_updated.to_rfc3339().as_str()))?;
+            stmt.bind((5, feed.favicon_url.as_deref()))?;
+            stmt.bind((6, feed.last_updated.to_rfc3339().as_str()))?;
 
             // Execute the statement
             stmt.next()?;

@@ -1,6 +1,7 @@
 use crate::{
     config::Config,
     providers::{
+        favicon::FaviconProviderImpl,
         feed_parser::{AtomParserImpl, RssParserImpl},
         html_processor::HtmlProcessorImpl,
         persisted_config::PersistedConfigProviderImpl,
@@ -12,7 +13,7 @@ use crate::{
             PersistedConfigRepository,
         },
     },
-    router::ARTICLES_DIR,
+    router::{ARTICLES_DIR, FAVICONS_DIR},
     services::templates::TEMPLATES,
 };
 use std::sync::Arc;
@@ -39,6 +40,7 @@ pub struct State {
             HtmlProcessorImpl,
             RssParserImpl,
             AtomParserImpl,
+            FaviconProviderImpl,
         >,
     >,
 
@@ -98,7 +100,8 @@ impl State {
             html_processor_provider,
             rss_parser_provider,
             atom_parser_provider,
-            config,
+            Arc::new(FaviconProviderImpl::new(config.clone(), FAVICONS_DIR)),
+            config.clone(),
             ARTICLES_DIR,
         ));
 
@@ -123,6 +126,7 @@ impl AppState for State {
         HtmlProcessorImpl,
         RssParserImpl,
         AtomParserImpl,
+        FaviconProviderImpl,
     >;
     type PCS =
         PersistedConfigServiceImpl<PersistedConfigFsRepositoryImpl, PersistedConfigProviderImpl>;

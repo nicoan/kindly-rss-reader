@@ -1,5 +1,5 @@
 use axum::{
-    routing::{get, post, delete},
+    routing::{delete, get, post},
     Router,
 };
 use tower_http::services::ServeDir;
@@ -8,7 +8,10 @@ use crate::{
     config::Config,
     controllers::{
         config::{set_dark_theme, set_zoom},
-        feed::{add_new_feed, add_new_feed_form, delete_feed, get_article, get_article_list, get_feed_list},
+        feed::{
+            add_new_feed, add_new_feed_form, delete_feed, get_article, get_article_list,
+            get_feed_list,
+        },
         not_found::not_found,
     },
     middlewares::error_handling_middleware::ErrorHandlingLayer,
@@ -17,6 +20,7 @@ use crate::{
 
 pub const STATIC_DIR: &str = "/static";
 pub const ARTICLES_DIR: &str = "/articles";
+pub const FAVICONS_DIR: &str = "/favicons";
 
 pub fn build<S: AppState>(state: S, config: &Config) -> Router {
     let static_data_path = std::path::absolute(format!("{}/static/", config.static_data_path))
@@ -29,10 +33,16 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
         .into_os_string()
         .into_string()
         .expect("invalid articles path");
+    let favicons_path = std::path::absolute(format!("{}/favicons/", config.data_path))
+        .expect("invalid favicons path")
+        .into_os_string()
+        .into_string()
+        .expect("invalid favicons path");
 
     Router::new()
         .nest_service(STATIC_DIR, ServeDir::new(&static_data_path))
         .nest_service(ARTICLES_DIR, ServeDir::new(articles_path))
+        .nest_service(FAVICONS_DIR, ServeDir::new(favicons_path))
         .route(
             "/feed/add",
             get(add_new_feed_form::<S>).post(add_new_feed::<S>),
