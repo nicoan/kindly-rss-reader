@@ -1,9 +1,10 @@
-use super::{FaviconProvider, Result, FaviconProviderError};
+use super::{FaviconProvider, FaviconProviderError, Result};
 use crate::config::Config;
 use axum::async_trait;
 use axum::body::Bytes;
 use scraper::{Html, Selector};
 use std::sync::Arc;
+use tracing::info;
 
 pub struct FaviconProviderImpl {
     config: Arc<Config>,
@@ -11,6 +12,14 @@ pub struct FaviconProviderImpl {
 }
 
 impl FaviconProviderImpl {
+    const FAVICON_SELECTORS: [&str; 3] = [
+        r#"link[rel~="icon"]"#,
+        r#"link[rel="shortcut icon"]"#,
+        r#"link[rel="icon shortcut"]"#,
+    ];
+
+    const KNOWN_FEED_PREFIXES: [&str; 4] = ["feeds.", "feed.", "rss.", "atom."];
+
     pub fn new(config: Arc<Config>, favicon_router_path: &'static str) -> Self {
         Self {
             config,
@@ -23,28 +32,26 @@ impl FaviconProviderImpl {
     }
 
     fn get_favicon_file_path(&self, feed_id: &str) -> std::path::PathBuf {
-        self.get_favicon_dir().join(format!("{}.png", feed_id))
+        self.get_favicon_dir().join(feed_id)
     }
 
     fn extract_base_url(&self, feed_link: &str) -> String {
         if let Ok(url) = reqwest::Url::parse(feed_link) {
             let host = url.host_str().unwrap_or("");
             let scheme = url.scheme();
-            
-            let known_feed_prefixes = ["feeds.", "feed.", "rss.", "atom."];
-            
-            for prefix in known_feed_prefixes.iter() {
+
+            for prefix in &Self::KNOWN_FEED_PREFIXES {
                 if host.contains(prefix) {
                     let parts: Vec<&str> = host.split('.').collect();
                     if parts.len() > 2 {
                         let tld = parts.last().unwrap_or(&"");
                         let domain = parts.get(parts.len() - 2).unwrap_or(&"");
-                        
-                        return format!("{}://www.{}.{}/", scheme, domain, tld);
+
+                        return format!("{}://{}.{}/", scheme, domain, tld);
                     }
                 }
             }
-            
+
             return format!("{}://{}/", scheme, host);
         }
         feed_link.trim_end_matches('/').to_string()
@@ -62,13 +69,7 @@ impl FaviconProviderImpl {
 
         // Try to find favicon link tags with various rel attributes
         // Check for: rel="icon", rel="shortcut icon", rel="icon shortcut", etc.
-        let selectors = vec![
-            r#"link[rel~="icon"]"#,
-            r#"link[rel="shortcut icon"]"#,
-            r#"link[rel="icon shortcut"]"#,
-        ];
-
-        for selector_str in selectors {
+        for selector_str in Self::FAVICON_SELECTORS {
             if let Ok(selector) = Selector::parse(selector_str) {
                 if let Some(element) = document.select(&selector).next() {
                     if let Some(href) = element.value().attr("href") {
@@ -108,35 +109,29 @@ impl FaviconProviderImpl {
         }
 
         // Fallback: just append the href to base_url
-        format!("{}/{}", base_url.trim_end_matches('/'), href.trim_start_matches('/'))
+        format!(
+            "{}/{}",
+            base_url.trim_end_matches('/'),
+            href.trim_start_matches('/')
+        )
     }
 
     async fn try_download_favicon(&self, url: &str) -> Option<Bytes> {
-        match reqwest::get(url).await {
-            Ok(response) => {
-                if response.status().is_success() {
-                    match response.bytes().await {
-                        Ok(bytes) => {
-                            if bytes.len() > 0 {
-                                return Some(bytes);
-                            }
-                        }
-                        Err(_) => {}
+        if let Ok(response) = reqwest::get(url).await {
+            if response.status().is_success() {
+                if let Ok(bytes) = response.bytes().await {
+                    if !bytes.is_empty() {
+                        return Some(bytes);
                     }
                 }
             }
-            Err(_) => {}
         }
         None
     }
 
     async fn try_common_favicon_paths(&self, base_url: &str) -> Option<Bytes> {
         // Try common favicon locations as fallback
-        let common_paths = vec![
-            "/favicon.ico",
-            "/favicon.png",
-            "/apple-touch-icon.png",
-        ];
+        let common_paths = vec!["/favicon.ico", "/favicon.png", "/apple-touch-icon.png"];
 
         for path in common_paths {
             let url = format!("{}{}", base_url.trim_end_matches('/'), path);
@@ -163,23 +158,26 @@ impl FaviconProvider for FaviconProviderImpl {
 
         // Step 1: Try to parse favicon URL from HTML
         if let Some(favicon_url) = self.parse_favicon_from_html(&base_url).await {
+            info!("Attempting to download favicon from parsed URL: {favicon_url}");
             if let Some(bytes) = self.try_download_favicon(&favicon_url).await {
                 tokio::fs::write(&favicon_path, &bytes)
                     .await
                     .map_err(|e| FaviconProviderError::IoError(e.to_string()))?;
 
-                let relative_path = format!("{}/{}.png", self.favicon_router_path, feed_id);
+                let relative_path = format!("{}/{}", self.favicon_router_path, feed_id);
                 return Ok(Some(relative_path));
             }
+            info!("Could not download fav icon from {favicon_url}");
         }
 
         // Step 2: Fallback to common favicon paths
         if let Some(bytes) = self.try_common_favicon_paths(&base_url).await {
+            info!("Trying fav icon in common urls");
             tokio::fs::write(&favicon_path, &bytes)
                 .await
                 .map_err(|e| FaviconProviderError::IoError(e.to_string()))?;
 
-            let relative_path = format!("{}/{}.png", self.favicon_router_path, feed_id);
+            let relative_path = format!("{}/{}", self.favicon_router_path, feed_id);
             return Ok(Some(relative_path));
         }
 

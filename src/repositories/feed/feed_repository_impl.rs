@@ -27,8 +27,8 @@ impl FeedRepository for FeedRepositoryImpl {
     async fn get_feed_list(&self) -> Result<Vec<Feed>, RepositoryError> {
         self.connection
             .prepare(
-                "SELECT f.*, 
-                (SELECT COUNT(*) FROM article a WHERE a.feed_id = f.id AND a.read = 0) as unread_count 
+                "SELECT f.*,
+                (SELECT COUNT(*) FROM article a WHERE a.feed_id = f.id AND a.read = 0) as unread_count
                 FROM feed f;"
             )?
             .into_iter()
@@ -39,8 +39,8 @@ impl FeedRepository for FeedRepositoryImpl {
     async fn get_feed(&self, feed_id: Uuid) -> Result<Option<Feed>, RepositoryError> {
         self.connection
             .prepare(
-                "SELECT f.*, 
-                (SELECT COUNT(*) FROM article a WHERE a.feed_id = f.id AND a.read = 0) as unread_count 
+                "SELECT f.*,
+                (SELECT COUNT(*) FROM article a WHERE a.feed_id = f.id AND a.read = 0) as unread_count
                 FROM feed f WHERE f.id = ?;"
             )?
             .into_iter()
@@ -190,7 +190,7 @@ impl FeedRepository for FeedRepositoryImpl {
             Ok(())
         })
     }
-    
+
     async fn delete_feed(&self, feed_id: Uuid) -> Result<(), RepositoryError> {
         transaction!(self, {
             // First delete all articles related to this feed
@@ -201,16 +201,35 @@ impl FeedRepository for FeedRepositoryImpl {
             stmt.next()?;
             stmt.reset()?;
             drop(stmt);
-            
+
             // Then delete the feed itself
-            let mut stmt = self
-                .connection
-                .prepare("DELETE FROM feed WHERE id = ?")?;
+            let mut stmt = self.connection.prepare("DELETE FROM feed WHERE id = ?")?;
             stmt.bind((1, feed_id.to_string().as_str()))?;
             stmt.next()?;
             stmt.reset()?;
             drop(stmt);
-            
+
+            Ok(())
+        })
+    }
+
+    async fn update_favicon_url(
+        &self,
+        feed_id: Uuid,
+        favicon_url: &str,
+    ) -> Result<(), RepositoryError> {
+        transaction!(self, {
+            let mut stmt = self
+                .connection
+                .prepare("UPDATE feed SET favicon_path = ? WHERE id = ?")?;
+            stmt.bind((1, favicon_url))?;
+            stmt.bind((2, feed_id.to_string().as_str()))?;
+
+            // execute the statement
+            stmt.next()?;
+            stmt.reset()?;
+            drop(stmt);
+
             Ok(())
         })
     }

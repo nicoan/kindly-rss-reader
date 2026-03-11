@@ -53,6 +53,7 @@ where
     FAP: FeedParser + 'static,
     FVP: FaviconProvider + 'static,
 {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         feed_repository: Arc<FR>,
         feed_content_repository: Arc<FCR>,
@@ -270,8 +271,9 @@ where
         };
 
         let feed_id = Uuid::new_v4();
-        
-        let favicon_url = self.favicon_provider
+
+        let favicon_url = self
+            .favicon_provider
             .download_favicon(&link, feed_id.to_string().as_str())
             .await
             .ok()
@@ -294,10 +296,11 @@ where
 
     async fn get_channel(&self, feed_id: Uuid) -> Result<(Feed, Vec<Article>)> {
         let feed = self.feed_repository.get_feed(feed_id).await?;
-        if let Some(feed) = feed {
+        if let Some(mut feed) = feed {
             let mut articles = if Utc::now() - feed.last_updated
                 > TimeDelta::minutes(self.config.minutes_to_check_for_updates.into())
             {
+                tracing::info!("checking for updates for feed {}", feed.title);
                 let content = Self::download_feed_content(feed.url.as_str()).await?;
                 let parsed_feed = self.parse_feed(&content)?;
 
@@ -411,6 +414,35 @@ where
                     processed_articles.into_iter().map(|(a, _)| a).collect();
 
                 articles.extend(saved_articles);
+
+                // Sort the articles by last updated, with the most recent first
+                articles.sort_by(|a1, a2| a2.last_updated.cmp(&a1.last_updated));
+
+                // Check if the feed has a favicon, if not we try to download it
+                if feed.favicon_url.is_none() {
+                    match self
+                        .favicon_provider
+                        .download_favicon(&feed.link, feed_id.to_string().as_str())
+                        .await
+                    {
+                        Ok(Some(favicon_url)) => {
+                            self.feed_repository
+                                .update_favicon_url(feed_id, &favicon_url)
+                                .await?;
+
+                            feed.favicon_url = Some(favicon_url);
+                        }
+                        Ok(None) => {
+                            tracing::info!("no favicon found for feed {}", feed.title);
+                        }
+                        Err(e) => {
+                            tracing::error!(
+                                "there was an error downloading the favicon for feed {}: {e:?}",
+                                feed.title
+                            );
+                        }
+                    }
+                }
 
                 articles
             } else {

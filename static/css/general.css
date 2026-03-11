@@ -212,3 +212,10 @@ sub {
     display: flex;
     justify-content: space-between;
 }
+
+.favicon {
+    width: 24;
+    height: 24;
+    margin-right: 10px;
+    border-radius: 3px;
+}

@@ -1,4 +1,5 @@
 /target
 database.db
 /articles
+/favicons
 .DS_store
