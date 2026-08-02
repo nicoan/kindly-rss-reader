@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2025-2026 Nicolás Antinori <nico.antinori.7@gmail.com>
+// SPDX-License-Identifier: AGPL-3.0-only
 mod add_new_feed;
 mod add_new_feed_form;
 mod delete_feed;
