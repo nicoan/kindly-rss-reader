@@ -11,7 +11,7 @@ p, h1, h2, h3, h4, h5, h6, sub, ol, li, code {
 }
 
 /* invert image colors in dark theme */
-img {
+img:not(.favicon) {
    filter: invert(1);
 }
 
