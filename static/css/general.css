@@ -117,29 +117,17 @@ sub {
 
 .body::-webkit-scrollbar { width: 0 !important }
 
-.badge-new {
-  display: inline-block;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 4px;
-  margin: 10px;
-}
-
 .not-found {
   text-align: center;
   padding: 40px;
 }
 
 .unread-count {
-  display: inline-block;
   font-size: 0.8em;
   font-weight: bold;
   padding: 2px 8px;
   border-radius: 12px;
-  margin-left: 8px;
-  vertical-align: middle;
+  margin-left: auto;
 }
 
 /* Add feed form styles */
@@ -213,9 +201,24 @@ sub {
     justify-content: space-between;
 }
 
+.feed-list-item {
+    display: flex;
+    padding: 0 5px;
+    align-items: center;
+    width: 100%;
+}
+
 .favicon {
     width: 24;
     height: 24;
     margin-right: 10px;
     border-radius: 3px;
+}
+
+.article-list-item {
+    display: flex;
+    padding: 0 5px;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
 }
