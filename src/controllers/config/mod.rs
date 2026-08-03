@@ -1,5 +1,7 @@
 mod set_dark_theme;
+mod set_toolbar_position_left;
 mod set_zoom;
 
 pub use set_dark_theme::set_dark_theme;
+pub use set_toolbar_position_left::set_toolbar_position_left;
 pub use set_zoom::set_zoom;
