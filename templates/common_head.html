@@ -35,6 +35,7 @@
 
         bodyDiv.style.zoom = zoom;
         darkTheme = {{ config.dark_theme }};
+        updateZoomValue();
     }
 
     function removeGhostLettersInit() {
@@ -87,11 +88,19 @@
         });
     }
 
+    function updateZoomValue() {
+        let zoomInput = document.getElementById("zoom-input");
+        if (zoomInput) {
+            zoomInput.value = Math.round(zoom * 100) + "%";
+        }
+    }
+
     function zoomIn() {
         zoom += zoomStep;
         bodyDiv.style.zoom = zoom;
 
         setZoomConfig(zoom);
+        updateZoomValue();
     }
 
     function zoomOut() {
@@ -99,6 +108,7 @@
         bodyDiv.style.zoom = zoom;
 
         setZoomConfig(zoom);
+        updateZoomValue();
     }
 
     function toggleTheme() {

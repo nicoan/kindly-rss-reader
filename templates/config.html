@@ -1,0 +1,82 @@
+<html>
+    <head>
+        {% include "common_head" %}
+    </head>
+    <body>
+        <main class="main">
+            {% if config.toolbar_position_left %}
+                {% include "toolbar" %}
+            {% endif %}
+            <div class="content">
+                <div id="header" class="section-header">
+                    <h1> Configuration </h1>
+                </div>
+                <div id="body" class="body">
+                    <form class="feed-form">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input
+                                    type="checkbox"
+                                    name="dark_theme"
+                                    {% if config.dark_theme %} checked {% endif %}
+                                    onchange="toggleTheme()"
+                                />
+                                Dark theme
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input
+                                    type="checkbox"
+                                    name="toolbar_position_left"
+                                    {% if config.toolbar_position_left %} checked {% endif %}
+                                    onchange="toggleToolbarPosition()"
+                                />
+                                Toolbar on the left
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Zoom</label>
+                            <div class="zoom-control">
+                                <button
+                                    type="button"
+                                    class="rect-btn"
+                                    onclick="zoomOut(); updateZoomValue();"
+                                    aria-label="Zoom out"
+                                >-</button>
+                                <input
+                                    id="zoom-input"
+                                    type="text"
+                                    readonly
+                                    value="{{ (config.zoom * 100)|round(0)|int }}%"
+                                />
+                                <button
+                                    type="button"
+                                    class="rect-btn"
+                                    onclick="zoomIn(); updateZoomValue();"
+                                    aria-label="Zoom in"
+                                >+</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% if not config.toolbar_position_left %}
+                {% include "toolbar" %}
+            {% endif %}
+        </main>
+        <script>
+            var toolbarPositionLeft = {{ config.toolbar_position_left }};
+
+            function toggleToolbarPosition() {
+                toolbarPositionLeft = !toolbarPositionLeft;
+
+                fetch("/config/toolbar_position_left", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: new URLSearchParams({ toolbar_position_left: toolbarPositionLeft })
+                }).then(() => location.reload());
+            }
+        </script>
+    </body>
+</html>
