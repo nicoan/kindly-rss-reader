@@ -168,6 +168,22 @@ sub {
   cursor: pointer;
 }
 
+.zoom-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zoom-control input {
+  width: 100px;
+  padding: 12px;
+  font-size: 16pt;
+  border: 2px solid #666;
+  border-radius: 4px;
+  background-color: transparent;
+  text-align: center;
+}
+
 .dialog-ovelay {
     position: fixed;
     top: 0;
