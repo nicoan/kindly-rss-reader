@@ -4,6 +4,9 @@
     </head>
     <body>
         <main class="main">
+            {% if config.toolbar_position_left %}
+                {% include "toolbar" %}
+            {% endif %}
             <div class="content">
                 <div class="section-header">
                     <h1> Add new feed </h1>
@@ -21,7 +24,9 @@
                     </form>
                 </div>
             </div>
-            {% include "toolbar" %}
+            {% if not config.toolbar_position_left %}
+                {% include "toolbar" %}
+            {% endif %}
         </main>
     </body>
 </html>
