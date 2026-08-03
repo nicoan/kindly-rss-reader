@@ -20,4 +20,6 @@ pub trait PersistedConfigService: Sync + Send {
     async fn set_zoom(&self, value: f64) -> Result<()>;
 
     async fn set_dark_theme(&self, value: bool) -> Result<()>;
+
+    async fn set_toolbar_position_left(&self, value: bool) -> Result<()>;
 }

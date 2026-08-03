@@ -59,4 +59,16 @@ where
             .save_configuration(config)
             .await?)
     }
+
+    async fn set_toolbar_position_left(&self, value: bool) -> Result<()> {
+        let config = self
+            .persisted_config_provider
+            .set_toolbar_position_left(value)
+            .await?;
+
+        Ok(self
+            .persisted_config_repository
+            .save_configuration(config)
+            .await?)
+    }
 }
