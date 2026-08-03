@@ -6,6 +6,9 @@
     </head>
     <body>
         <main class="main">
+            {% if config.toolbar_position_left %}
+                {% include "toolbar" %}
+            {% endif %}
             <div class="content">
                 <div id="header" class="section-header">
                     {% if context.feed.favicon_url %}
@@ -36,7 +39,9 @@
                     {% endfor %}
                 </div>
             </div>
-            {% include "toolbar" %}
+            {% if not config.toolbar_position_left %}
+                {% include "toolbar" %}
+            {% endif %}
         </main>
 
         {% with
