@@ -36,4 +36,10 @@ impl PersistedConfigProvider for PersistedConfigProviderImpl {
         config.dark_theme = value;
         Ok(config.clone())
     }
+
+    async fn set_toolbar_position_left(&self, value: bool) -> Result<PersistedConfig> {
+        let mut config = self.loaded_configuration.write().await;
+        config.toolbar_position_left = value;
+        Ok(config.clone())
+    }
 }
