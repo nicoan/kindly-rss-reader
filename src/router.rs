@@ -10,8 +10,8 @@ use crate::{
     config::Config,
     controllers::{
         config::{
-            get_config, set_dark_theme, set_hide_article_header, set_toolbar_position_left,
-            set_zoom,
+            get_config, set_dark_theme, set_dont_invert_images, set_hide_article_header,
+            set_toolbar_position_left, set_zoom,
         },
         feed::{
             add_new_feed, add_new_feed_form, delete_feed, get_article, get_article_list,
@@ -65,6 +65,10 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
         .route(
             "/config/hide_article_header",
             post(set_hide_article_header::<S>),
+        )
+        .route(
+            "/config/dont_invert_images",
+            post(set_dont_invert_images::<S>),
         )
         .route("/", get(get_feed_list::<S>))
         .layer(ErrorHandlingLayer::new(state.clone()))
