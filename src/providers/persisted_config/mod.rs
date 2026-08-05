@@ -20,4 +20,6 @@ pub trait PersistedConfigProvider: Sync + Send {
     async fn set_dark_theme(&self, value: bool) -> Result<PersistedConfig>;
 
     async fn set_toolbar_position_left(&self, value: bool) -> Result<PersistedConfig>;
+
+    async fn set_hide_article_header(&self, value: bool) -> Result<PersistedConfig>;
 }

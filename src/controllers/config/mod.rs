@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 mod get_config;
 mod set_dark_theme;
+mod set_hide_article_header;
 mod set_toolbar_position_left;
 mod set_zoom;
 
 pub use get_config::get_config;
 pub use set_dark_theme::set_dark_theme;
+pub use set_hide_article_header::set_hide_article_header;
 pub use set_toolbar_position_left::set_toolbar_position_left;
 pub use set_zoom::set_zoom;

@@ -9,7 +9,10 @@ use tower_http::services::ServeDir;
 use crate::{
     config::Config,
     controllers::{
-        config::{get_config, set_dark_theme, set_toolbar_position_left, set_zoom},
+        config::{
+            get_config, set_dark_theme, set_hide_article_header, set_toolbar_position_left,
+            set_zoom,
+        },
         feed::{
             add_new_feed, add_new_feed_form, delete_feed, get_article, get_article_list,
             get_feed_list,
@@ -58,6 +61,10 @@ pub fn build<S: AppState>(state: S, config: &Config) -> Router {
         .route(
             "/config/toolbar_position_left",
             post(set_toolbar_position_left::<S>),
+        )
+        .route(
+            "/config/hide_article_header",
+            post(set_hide_article_header::<S>),
         )
         .route("/", get(get_feed_list::<S>))
         .layer(ErrorHandlingLayer::new(state.clone()))
