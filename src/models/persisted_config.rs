@@ -15,6 +15,9 @@ pub struct PersistedConfig {
 
     #[serde(default)]
     pub hide_article_header: bool,
+
+    #[serde(default)]
+    pub dont_invert_images: bool,
 }
 
 impl Default for PersistedConfig {
@@ -24,6 +27,7 @@ impl Default for PersistedConfig {
             zoom: 1.0,
             toolbar_position_left: false,
             hide_article_header: false,
+            dont_invert_images: false,
         }
     }
 }

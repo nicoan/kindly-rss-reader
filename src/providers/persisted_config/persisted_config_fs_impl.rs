@@ -48,4 +48,10 @@ impl PersistedConfigProvider for PersistedConfigProviderImpl {
         config.hide_article_header = value;
         Ok(config.clone())
     }
+
+    async fn set_dont_invert_images(&self, value: bool) -> Result<PersistedConfig> {
+        let mut config = self.loaded_configuration.write().await;
+        config.dont_invert_images = value;
+        Ok(config.clone())
+    }
 }

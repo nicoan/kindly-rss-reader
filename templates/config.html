@@ -47,6 +47,17 @@
                             </label>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">
+                                <input
+                                    type="checkbox"
+                                    name="dont_invert_images"
+                                    {% if config.dont_invert_images %} checked {% endif %}
+                                    onchange="toggleDontInvertImages()"
+                                />
+                                Don't invert images in dark theme
+                            </label>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Zoom</label>
                             <div class="zoom-control">
                                 <button
@@ -79,6 +90,17 @@
         <script>
             var toolbarPositionLeft = {{ config.toolbar_position_left }};
             var hideArticleHeader = {{ config.hide_article_header }};
+            var dontInvertImages = {{ config.dont_invert_images }};
+
+            function toggleDontInvertImages() {
+                dontInvertImages = !dontInvertImages;
+
+                fetch("/config/dont_invert_images", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                  body: new URLSearchParams({ dont_invert_images: dontInvertImages })
+                });
+            }
 
             function toggleHideArticleHeader() {
                 hideArticleHeader = !hideArticleHeader;

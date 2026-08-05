@@ -83,4 +83,16 @@ where
             .save_configuration(config)
             .await?)
     }
+
+    async fn set_dont_invert_images(&self, value: bool) -> Result<()> {
+        let config = self
+            .persisted_config_provider
+            .set_dont_invert_images(value)
+            .await?;
+
+        Ok(self
+            .persisted_config_repository
+            .save_configuration(config)
+            .await?)
+    }
 }

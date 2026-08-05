@@ -24,4 +24,6 @@ pub trait PersistedConfigService: Sync + Send {
     async fn set_toolbar_position_left(&self, value: bool) -> Result<()>;
 
     async fn set_hide_article_header(&self, value: bool) -> Result<()>;
+
+    async fn set_dont_invert_images(&self, value: bool) -> Result<()>;
 }
