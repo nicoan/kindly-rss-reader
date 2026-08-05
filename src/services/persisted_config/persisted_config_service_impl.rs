@@ -71,4 +71,16 @@ where
             .save_configuration(config)
             .await?)
     }
+
+    async fn set_hide_article_header(&self, value: bool) -> Result<()> {
+        let config = self
+            .persisted_config_provider
+            .set_hide_article_header(value)
+            .await?;
+
+        Ok(self
+            .persisted_config_repository
+            .save_configuration(config)
+            .await?)
+    }
 }

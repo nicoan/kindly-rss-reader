@@ -10,6 +10,7 @@
                 {% include "toolbar" %}
             {% endif %}
             <div class="content">
+                {% if not config.hide_article_header %}
                 <div id="header" class="section-header">
                     {% if context.feed.favicon_url %}
                         <img src="{{ context.feed.favicon_url }}" class="favicon" />
@@ -18,6 +19,7 @@
                     {% endif %}
                     <h1> {{ context.feed.title }} </h1>
                 </div>
+                {% endif %}
                 <div id="body" class="body">
                     {% if not context.article_data.html_parsed %}
                     <h1> {{ context.article_data.title }} </h1>

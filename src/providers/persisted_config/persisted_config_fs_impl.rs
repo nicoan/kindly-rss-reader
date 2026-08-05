@@ -42,4 +42,10 @@ impl PersistedConfigProvider for PersistedConfigProviderImpl {
         config.toolbar_position_left = value;
         Ok(config.clone())
     }
+
+    async fn set_hide_article_header(&self, value: bool) -> Result<PersistedConfig> {
+        let mut config = self.loaded_configuration.write().await;
+        config.hide_article_header = value;
+        Ok(config.clone())
+    }
 }

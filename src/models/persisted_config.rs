@@ -12,6 +12,9 @@ pub struct PersistedConfig {
 
     #[serde(default)]
     pub toolbar_position_left: bool,
+
+    #[serde(default)]
+    pub hide_article_header: bool,
 }
 
 impl Default for PersistedConfig {
@@ -20,6 +23,7 @@ impl Default for PersistedConfig {
             dark_theme: false,
             zoom: 1.0,
             toolbar_position_left: false,
+            hide_article_header: false,
         }
     }
 }

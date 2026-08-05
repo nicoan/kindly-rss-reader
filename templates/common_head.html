@@ -27,7 +27,8 @@
         bodyDiv = document.getElementById("body");
         offsetNotScroll = Math.round(bodyDiv.offsetHeight * 0.1);
 
-        let headerHeight = document.getElementById("header").offsetHeight;
+        let headerElement = document.getElementById("header");
+        let headerHeight = headerElement ? headerElement.offsetHeight : 0;
         bodyDiv.style.height = `calc(100vh - ${headerHeight}px - 20px)`;
 
         let toolbarWidth = document.getElementById("toolbar").offsetWidth;
