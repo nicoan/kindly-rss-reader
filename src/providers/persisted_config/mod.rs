@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2025-2026 Nicolás Antinori <nico.antinori.7@gmail.com>
+// SPDX-License-Identifier: AGPL-3.0-only
 //! This provider acts as a memory cache for the persisted config
 mod error;
 mod persisted_config_fs_impl;

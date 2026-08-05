@@ -1,3 +1,9 @@
+// SPDX-FileCopyrightText: 2025-2026 Keheliya Gallaba
+// SPDX-FileCopyrightText: 2025-2026 Nicolás Antinori <nico.antinori.7@gmail.com>
+// SPDX-License-Identifier: AGPL-3.0-only
+//
+// Original implementation by Keheliya Gallaba. Subsequent
+// modifications by Nicolás Antinori (AGPL-3.0-only).
 use super::{FaviconProvider, FaviconProviderError, Result};
 use crate::config::Config;
 use axum::async_trait;
