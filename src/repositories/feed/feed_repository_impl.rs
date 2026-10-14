@@ -82,7 +82,12 @@ impl FeedRepository for FeedRepositoryImpl {
 
     async fn get_feed_articles(&self, feed_id: Uuid) -> Result<Vec<Article>, RepositoryError> {
         self.connection
-            .prepare("SELECT * FROM article WHERE feed_id = ?")?
+            .prepare(
+                r#"
+                    SELECT * FROM article WHERE feed_id = ?
+                    ORDER BY last_updated DESC
+                "#,
+            )?
             .into_iter()
             .bind((1, feed_id.to_string().as_str()))?
             .flat_map(|r| r.map(Article::try_from))

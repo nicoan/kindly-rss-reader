@@ -418,7 +418,7 @@ where
                 articles.extend(saved_articles);
 
                 // Sort the articles by last updated, with the most recent first
-                articles.sort_by(|a1, a2| a2.last_updated.cmp(&a1.last_updated));
+                articles.sort_by_key(|a2| std::cmp::Reverse(a2.last_updated));
 
                 // Check if the feed has a favicon, if not we try to download it
                 if feed.favicon_url.is_none() {
@@ -451,7 +451,7 @@ where
                 self.feed_repository.get_feed_articles(feed_id).await?
             };
 
-            articles.sort_by(|a1, a2| a2.last_updated.cmp(&a1.last_updated));
+            articles.sort_by_key(|a2| std::cmp::Reverse(a2.last_updated));
 
             Ok((feed, articles))
         } else {
