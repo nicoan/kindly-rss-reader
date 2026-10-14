@@ -18,6 +18,11 @@
                         <img src="/static/images/default_favicon.png" class="favicon" />
                     {% endif %}
                     <h1> {{ context.feed.title }} </h1>
+                    {% if context.article_data.updatable %}
+                    <div class="section-header-buttons">
+                        <i class="fa fa-refresh button" aria-hidden="true"></i>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endif %}
                 <div id="body" class="body">

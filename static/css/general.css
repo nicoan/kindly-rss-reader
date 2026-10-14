@@ -130,6 +130,18 @@ sub {
   margin-left: auto;
 }
 
+.updatable {
+  font-size: 0.8em;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: auto;
+}
+
+.updatable + .unread-count {
+  margin-left: 5px;
+}
+
 /* Add feed form styles */
 .feed-form {
   padding: 20px;

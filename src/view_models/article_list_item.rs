@@ -12,6 +12,7 @@ pub struct ArticleListItem {
     author: String,
     date: String,
     read: bool,
+    updatable: bool,
 }
 
 impl From<Article> for ArticleListItem {
@@ -22,6 +23,7 @@ impl From<Article> for ArticleListItem {
             author: value.author.unwrap_or_default(),
             date: value.last_updated.format("%B %d, %Y").to_string(),
             read: value.read,
+            updatable: value.updatable,
         }
     }
 }
