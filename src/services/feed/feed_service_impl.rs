@@ -145,6 +145,27 @@ where
             .map_err(|e| FeedServiceError::Unexpected(e.into()))
     }
 
+    /// Checks if articles already downloaded were updated. If they were updated they are marked as
+    /// updatable
+    async fn process_updatable_feeds(parsed_feed: ParsedFeed, saved_articles: &[Article]) {
+        let mut articles_to_update = Vec::new();
+        for item in parsed_feed.items {
+            let article = saved_articles.iter().find(|article| {
+                if let Some(guid) = &item.guid {
+                    &article.guid == guid
+                } else if let Some(link) = &item.link {
+                    article.link == link.as_str()
+                } else {
+                    false
+                }
+            });
+
+            if let Some(article) = article && let Some(pub_date) = item.pub_date && article.last_updated < pub_date {
+                articles_to_update.push(article.id);
+            }
+        }
+    }
+
     /// This function processes a feed item and adds it to the feed's article list.
     ///
     /// If `download_content` is `true`, then the article is downloaded and processed, otherwise,
@@ -156,8 +177,9 @@ where
         feed_id: Uuid,
         feed_link: Arc<String>,
         item: ParsedItem,
+        article_id: Option<Uuid>,
     ) -> Result<(Article, Option<ArticleContent>)> {
-        let article_id = Uuid::new_v4();
+        let article_id = article_id.unwrap_or(Uuid::new_v4());
 
         let article_link = item.link.clone().ok_or_else(|| {
             FeedServiceError::Unexpected(anyhow::anyhow!(
@@ -218,6 +240,7 @@ where
                 content: None,
                 read: false,
                 last_updated: date,
+                updatable: false,
             },
             content,
         ))
@@ -380,6 +403,7 @@ where
                         feed_id,
                         feed_link,
                         item,
+                        None,
                     ));
                 }
 
