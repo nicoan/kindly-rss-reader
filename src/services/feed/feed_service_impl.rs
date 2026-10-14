@@ -145,6 +145,51 @@ where
             .map_err(|e| FeedServiceError::Unexpected(e.into()))
     }
 
+    /// Checks if articles already downloaded were updated. If they were updated they are marked as
+    /// updated
+    async fn process_updated_articles(
+        image_processor: Arc<impl ImageProcessor>,
+        html_processor: Arc<HP>,
+        parsed_feed: &ParsedFeed,
+        saved_articles: &[Article],
+    ) -> Result<Vec<(Uuid, DateTime<Utc>)>> {
+        let mut articles_to_update = Vec::new();
+        for item in &parsed_feed.items {
+            let article = saved_articles.iter().find(|article| {
+                if let Some(guid) = &item.guid {
+                    &article.guid == guid
+                } else if let Some(link) = &item.link {
+                    article.link == link.as_str()
+                } else {
+                    false
+                }
+            });
+
+            if let Some(article) = article
+                && let Some(updated) = item.updated
+                && article.last_updated < updated
+            {
+                tracing::info!(
+                    "refreshing {} since it was updated from the last download",
+                    article.link
+                );
+                articles_to_update.push((article.id, updated));
+                Self::process_parsed_item(
+                    true,
+                    image_processor.clone(),
+                    html_processor.clone(),
+                    article.feed_id,
+                    Arc::new(article.link.to_owned()),
+                    item.clone(),
+                    Some(article.id),
+                )
+                .await?;
+            }
+        }
+
+        Ok(articles_to_update)
+    }
+
     /// This function processes a feed item and adds it to the feed's article list.
     ///
     /// If `download_content` is `true`, then the article is downloaded and processed, otherwise,
@@ -156,8 +201,9 @@ where
         feed_id: Uuid,
         feed_link: Arc<String>,
         item: ParsedItem,
+        article_id: Option<Uuid>,
     ) -> Result<(Article, Option<ArticleContent>)> {
-        let article_id = Uuid::new_v4();
+        let article_id = article_id.unwrap_or(Uuid::new_v4());
 
         let article_link = item.link.clone().ok_or_else(|| {
             FeedServiceError::Unexpected(anyhow::anyhow!(
@@ -218,6 +264,7 @@ where
                 content: None,
                 read: false,
                 last_updated: date,
+                updated: false,
             },
             content,
         ))
@@ -306,8 +353,37 @@ where
                 let content = Self::download_feed_content(feed.url.as_str()).await?;
                 let parsed_feed = self.parse_feed(&content)?;
 
+                let router_path = self.get_article_router_path(feed_id);
+                let file_path = self.get_article_file_path(feed_id);
+                let image_processor = Arc::new(ImageProcessorFsImpl::new(router_path, file_path));
+
                 // First we check with the channel and the database if any of the articles is new
-                let saved_articles = self.feed_repository.get_feed_articles(feed_id).await?;
+                let mut saved_articles = self.feed_repository.get_feed_articles(feed_id).await?;
+
+                // Process updated articles
+                let updated_articles = Self::process_updated_articles(
+                    image_processor.clone(),
+                    self.html_processor.clone(),
+                    &parsed_feed,
+                    &saved_articles,
+                )
+                .await?;
+
+                // Mark them in the database
+                self.feed_repository
+                    .mark_articles_as_updated(&updated_articles)
+                    .await
+                    .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
+
+                // And update them in the memory so the icon appears
+                saved_articles.iter_mut().for_each(|a| {
+                    if let Some((_, update_date)) =
+                        updated_articles.iter().find(|(id, _)| *id == a.id)
+                    {
+                        a.updated = true;
+                        a.last_updated = *update_date;
+                    }
+                });
 
                 let articles_guid: HashSet<&str> = saved_articles
                     .iter()
@@ -345,9 +421,6 @@ where
                 let mut join_set: JoinSet<Result<(Article, Option<ArticleContent>)>> =
                     JoinSet::new();
                 let feed_link = Arc::new(feed.link.clone());
-                let router_path = self.get_article_router_path(feed_id);
-                let file_path = self.get_article_file_path(feed_id);
-                let image_processor = Arc::new(ImageProcessorFsImpl::new(router_path, file_path));
 
                 // TODO: We are assuming the channel items are sorted by pub date desc
 
@@ -380,6 +453,7 @@ where
                         feed_id,
                         feed_link,
                         item,
+                        None,
                     ));
                 }
 

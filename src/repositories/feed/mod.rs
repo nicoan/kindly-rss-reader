@@ -35,6 +35,8 @@ pub trait FeedRepository: Sync + Send {
 
     async fn mark_article_as_read(&self, feed_id: Uuid, article_id: Uuid) -> Result<()>;
 
+    async fn mark_articles_as_updated(&self, articles: &[(Uuid, DateTime<Utc>)]) -> Result<()>;
+
     async fn delete_feed(&self, feed_id: Uuid) -> Result<()>;
 
     async fn update_favicon_url(&self, feed_id: Uuid, favicon_url: &str) -> Result<()>;

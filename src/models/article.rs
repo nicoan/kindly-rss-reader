@@ -21,6 +21,7 @@ pub struct Article {
     pub read: bool,
     pub html_parsed: bool,
     pub last_updated: DateTime<Utc>,
+    pub updated: bool,
 }
 
 impl TryFrom<Row> for Article {
@@ -45,6 +46,7 @@ impl TryFrom<Row> for Article {
             html_parsed: row.read::<i64, _>("html_parsed") != 0,
             last_updated: DateTime::from_str(row.read::<&str, _>("last_updated"))
                 .map_err(|e: chrono::ParseError| RepositoryError::Deserialization(e.into()))?,
+            updated: row.read::<i64, _>("updated") != 0,
         })
     }
 }

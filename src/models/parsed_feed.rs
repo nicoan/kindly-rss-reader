@@ -8,6 +8,7 @@ pub struct ParsedFeed {
     pub items: Vec<ParsedItem>,
 }
 
+#[derive(Clone)]
 pub struct ParsedItem {
     pub title: String,
     pub link: Option<String>,
@@ -15,4 +16,7 @@ pub struct ParsedItem {
     pub content: Option<String>,
     pub author: Option<String>,
     pub pub_date: Option<DateTime<Utc>>,
+    /// In atom is the field updated
+    /// In Rss we use dc fields or replicate pub_date
+    pub updated: Option<DateTime<Utc>>,
 }

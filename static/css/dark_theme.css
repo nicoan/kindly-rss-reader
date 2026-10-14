@@ -34,6 +34,11 @@ a {
     color: #000;
 }
 
+.updated {
+    background-color: #FFF;
+    color: #000;
+}
+
 .form-label {
     color: #FFF;
 }
