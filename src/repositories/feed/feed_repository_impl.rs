@@ -122,8 +122,8 @@ impl FeedRepository for FeedRepositoryImpl {
             for article in articles {
                 let mut stmt = self.connection.prepare(
                 r#"
-                    INSERT INTO article (id, feed_id, title, author, guid, link, last_updated, html_parsed, content, read)
-                    VALUES (:id, :feed_id, :title, :author, :guid, :link, :last_updated, :html_parsed, :content, 0)
+                    INSERT INTO article (id, feed_id, title, author, guid, link, last_updated, html_parsed, content, read, updated)
+                    VALUES (:id, :feed_id, :title, :author, :guid, :link, :last_updated, :html_parsed, :content, 0, 0)
                     ON CONFLICT(guid) DO NOTHING;
                 )"#)?;
                 stmt.bind((":id", article.id.to_string().as_str()))?;
@@ -185,13 +185,39 @@ impl FeedRepository for FeedRepositoryImpl {
         transaction!(self, {
             let mut stmt = self
                 .connection
-                .prepare("UPDATE article SET read = 1 WHERE feed_id = ? and id = ?")?;
+                .prepare("UPDATE article SET read = 1, updated = 0 WHERE feed_id = ? AND id = ?")?;
             stmt.bind((1, feed_id.to_string().as_str()))?;
             stmt.bind((2, article_id.to_string().as_str()))?;
 
             // execute the statement
             stmt.next()?;
             stmt.reset()?;
+            drop(stmt);
+
+            Ok(())
+        })
+    }
+
+    async fn mark_articles_as_updated(
+        &self,
+        articles: &[(Uuid, DateTime<Utc>)],
+    ) -> Result<(), RepositoryError> {
+        if articles.is_empty() {
+            return Ok(());
+        }
+
+        transaction!(self, {
+            let mut stmt = self
+                .connection
+                .prepare("UPDATE article SET updated = 1, last_updated = ? WHERE id = ?")?;
+
+            for (article_id, date) in articles {
+                stmt.bind((1, date.to_rfc3339().as_str()))?;
+                stmt.bind((2, article_id.to_string().as_str()))?;
+                stmt.next()?;
+                stmt.reset()?;
+            }
+
             drop(stmt);
 
             Ok(())

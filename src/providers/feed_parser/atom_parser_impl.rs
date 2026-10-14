@@ -52,7 +52,13 @@ impl FeedParser for AtomParserImpl {
                     guid: Some(entry.id().to_owned()),
                     content,
                     author,
-                    pub_date: Some(entry.updated().with_timezone(&Utc)),
+                    pub_date: Some(
+                        entry
+                            .published()
+                            .unwrap_or(entry.updated())
+                            .with_timezone(&Utc),
+                    ),
+                    updated: Some(entry.updated().with_timezone(&Utc)),
                 }
             })
             .collect();

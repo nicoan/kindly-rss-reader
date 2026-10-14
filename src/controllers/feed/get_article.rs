@@ -33,7 +33,7 @@ where
         )
         .await?;
 
-    if !article_data.read {
+    if !article_data.read || article_data.updated {
         state
             .feed_service()
             .mark_article_as_read(feed_id, article_id)

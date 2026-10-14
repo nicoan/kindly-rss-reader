@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS article (
     -- If the article  was exracted from an HTML instead of the content field in RSS
     html_parsed SMALLINT,
 
-
     -- This is the pub date. If for some reason the field is not available we put the date we parsed the article
     last_updated DATE NOT NULL,
 

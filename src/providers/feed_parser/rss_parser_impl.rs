@@ -33,6 +33,11 @@ impl FeedParser for RssParserImpl {
             .iter()
             .map(|item| {
                 let pub_date = item.pub_date().and_then(|date| self.parse_date(date).ok());
+                let updated = item
+                    .dublin_core_ext()
+                    .and_then(|dc| dc.dates.last())
+                    .and_then(|s| self.parse_date(s).ok())
+                    .or(pub_date);
 
                 ParsedItem {
                     title: item.title().unwrap_or("Unknown title").to_owned(),
@@ -41,6 +46,7 @@ impl FeedParser for RssParserImpl {
                     content: item.content().map(|s| s.to_owned()),
                     author: item.author().map(|s| s.to_owned()),
                     pub_date,
+                    updated,
                 }
             })
             .collect();
