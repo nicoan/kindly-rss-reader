@@ -3,8 +3,8 @@
 use crate::controllers::ApiError;
 use crate::services::persisted_config::PersistedConfigService;
 use crate::state::AppState;
-use axum::extract::State;
 use axum::Form;
+use axum::extract::State;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]

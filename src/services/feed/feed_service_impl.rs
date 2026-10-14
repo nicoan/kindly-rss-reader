@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 Nicolás Antinori <nico.antinori.7@gmail.com>
 // SPDX-License-Identifier: AGPL-3.0-only
-use super::error::FeedServiceError;
 use super::FeedService;
 use super::Result;
+use super::error::FeedServiceError;
 use crate::config::Config;
 use crate::models::article::Article;
 use crate::models::parsed_feed::ParsedFeed;
@@ -147,9 +147,13 @@ where
 
     /// Checks if articles already downloaded were updated. If they were updated they are marked as
     /// updatable
-    async fn process_updatable_feeds(parsed_feed: ParsedFeed, saved_articles: &[Article]) {
+    async fn process_updatable_articles(
+        feed_repository: Arc<FR>,
+        parsed_feed: &ParsedFeed,
+        saved_articles: &[Article],
+    ) -> Result<()> {
         let mut articles_to_update = Vec::new();
-        for item in parsed_feed.items {
+        for item in &parsed_feed.items {
             let article = saved_articles.iter().find(|article| {
                 if let Some(guid) = &item.guid {
                     &article.guid == guid
@@ -160,10 +164,20 @@ where
                 }
             });
 
-            if let Some(article) = article && let Some(pub_date) = item.pub_date && article.last_updated < pub_date {
+            if let Some(article) = article
+                && let Some(pub_date) = item.pub_date
+                && article.last_updated < pub_date
+            {
                 articles_to_update.push(article.id);
             }
         }
+
+        feed_repository
+            .mark_articles_as_updatable(&articles_to_update)
+            .await
+            .map_err(|e| FeedServiceError::Unexpected(e.into()))?;
+
+        Ok(())
     }
 
     /// This function processes a feed item and adds it to the feed's article list.
@@ -331,6 +345,14 @@ where
 
                 // First we check with the channel and the database if any of the articles is new
                 let saved_articles = self.feed_repository.get_feed_articles(feed_id).await?;
+
+                // Process updatable articles
+                Self::process_updatable_articles(
+                    self.feed_repository.clone(),
+                    &parsed_feed,
+                    &saved_articles,
+                )
+                .await?;
 
                 let articles_guid: HashSet<&str> = saved_articles
                     .iter()

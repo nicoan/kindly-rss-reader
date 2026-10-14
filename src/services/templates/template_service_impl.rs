@@ -3,12 +3,12 @@
 use super::Result;
 use crate::providers::persisted_config::PersistedConfigProvider;
 use axum::async_trait;
-use minijinja::context;
 use minijinja::Environment;
+use minijinja::context;
 use serde::Serialize;
 use std::{fs, path::Path, sync::Arc};
 
-use super::{error::TemplateServiceError, TemplateService};
+use super::{TemplateService, error::TemplateServiceError};
 
 #[derive(Clone)]
 pub struct TemplateServiceImpl<'a, PCP: PersistedConfigProvider> {

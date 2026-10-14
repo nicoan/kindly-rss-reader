@@ -4,7 +4,7 @@
 
 use std::{
     ffi::OsString,
-    fs::{read_dir, read_to_string, DirEntry},
+    fs::{DirEntry, read_dir, read_to_string},
     path::Path,
 };
 

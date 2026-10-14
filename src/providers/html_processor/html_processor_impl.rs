@@ -3,7 +3,7 @@
 //! TODO: Implement a proper parser!!!
 use crate::providers::image_processor::ImageProcessor;
 
-use super::{error::HtmlProcessorError, Result};
+use super::{Result, error::HtmlProcessorError};
 use axum::async_trait;
 use regex::Regex;
 use scraper::{Html, Selector};

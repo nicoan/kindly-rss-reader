@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 use crate::controllers::{ApiError, HtmlResponse};
 use crate::services::feed::FeedService;
-use crate::services::templates::{TemplateService, TEMPLATE_NAME_ARTICLE_LIST};
+use crate::services::templates::{TEMPLATE_NAME_ARTICLE_LIST, TemplateService};
 use crate::state::AppState;
 use crate::view_models::article_list_item::ArticleListItem;
 use axum::extract::Path;

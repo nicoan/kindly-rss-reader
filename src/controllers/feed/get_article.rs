@@ -3,8 +3,8 @@
 use crate::controllers::ApiError;
 use crate::controllers::HtmlResponse;
 use crate::services::feed::FeedService;
-use crate::services::templates::TemplateService;
 use crate::services::templates::TEMPLATE_NAME_ARTICLE;
+use crate::services::templates::TemplateService;
 use crate::state::AppState;
 use axum::extract::Path;
 use axum::extract::State;
