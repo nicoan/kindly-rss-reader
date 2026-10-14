@@ -198,6 +198,34 @@ impl FeedRepository for FeedRepositoryImpl {
         })
     }
 
+    async fn mark_articles_as_updatable(
+        &self,
+        article_ids: &[Uuid],
+    ) -> Result<(), RepositoryError> {
+        if article_ids.is_empty() {
+            return Ok(());
+        }
+
+        let placeholders = std::iter::repeat("?")
+            .take(article_ids.len())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let query = format!("UPDATE article SET updatable = 1 WHERE id IN ({placeholders})");
+
+        transaction!(self, {
+            let mut stmt = self.connection.prepare(query.as_str())?;
+            for (index, article_id) in article_ids.iter().enumerate() {
+                stmt.bind((index + 1, article_id.to_string().as_str()))?;
+            }
+
+            stmt.next()?;
+            stmt.reset()?;
+            drop(stmt);
+
+            Ok(())
+        })
+    }
+
     async fn delete_feed(&self, feed_id: Uuid) -> Result<(), RepositoryError> {
         transaction!(self, {
             // First delete all articles related to this feed
