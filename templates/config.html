@@ -90,9 +90,9 @@
             {% endif %}
         </main>
         <script>
-            var toolbarPositionLeft = {{ config.toolbar_position_left }};
-            var hideArticleHeader = {{ config.hide_article_header }};
-            var dontInvertImages = {{ config.dont_invert_images }};
+            var toolbarPositionLeft = getJinjaBool('{{ config.toolbar_position_left }}');
+            var hideArticleHeader = getJinjaBool('{{ config.hide_article_header }}');
+            var dontInvertImages = getJinjaBool('{{ config.dont_invert_images }}');
 
             function toggleDontInvertImages() {
                 dontInvertImages = !dontInvertImages;

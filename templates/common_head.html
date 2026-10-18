@@ -18,10 +18,9 @@
     var scrollPosition = 0;
     var bodyDiv = null;
     var offsetNotScroll = null;
-    var darkTheme = {{ config.dark_theme }};
+    var darkTheme = getJinjaBool('{{ config.dark_theme }}');
     var zoom = {{ config.zoom }};
     var zoomStep = 0.1;
-
 
     window.onpageshow = function(event) {
         if (sessionStorage.getItem("refresh")) {
@@ -29,6 +28,10 @@
           location.reload();
         }
     };
+
+    function getJinjaBool(value) {
+        return value == 'True';
+    }
 
     window.onload = function onLoad() {
         bodyDiv = document.getElementById("body");
@@ -42,7 +45,7 @@
         bodyDiv.style.maxWidth = `calc(100vw - ${toolbarWidth}px)`;
 
         bodyDiv.style.zoom = zoom;
-        darkTheme = {{ config.dark_theme }};
+        darkTheme = getJinjaBool('{{ config.dark_theme }}');
         updateZoomValue();
     }
 
