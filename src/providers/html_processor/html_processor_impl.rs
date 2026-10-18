@@ -79,6 +79,15 @@ impl HtmlProcessor for HtmlProcessorImpl {
             }
         }
 
+        // <section id="content">
+        let selector = Selector::parse(r#"section[id="content"]"#).unwrap();
+        let divs = fragment.select(&selector);
+        for div in divs.into_iter() {
+            if div.has_children() {
+                return Ok(div.html());
+            }
+        }
+
         Err(HtmlProcessorError::UnableToParse)
     }
 
