@@ -4,7 +4,7 @@
 //
 // Original implementation by Keheliya Gallaba. Subsequent
 // modifications by Nicolás Antinori (AGPL-3.0-only).
-use super::{error::FeedParserError, FeedParser, Result};
+use super::{FeedParser, Result, error::FeedParserError};
 use crate::models::parsed_feed::ParsedFeed;
 use crate::models::parsed_feed::ParsedItem;
 use anyhow::anyhow;

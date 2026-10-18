@@ -76,14 +76,12 @@ impl FaviconProviderImpl {
         // Try to find favicon link tags with various rel attributes
         // Check for: rel="icon", rel="shortcut icon", rel="icon shortcut", etc.
         for selector_str in Self::FAVICON_SELECTORS {
-            if let Ok(selector) = Selector::parse(selector_str) {
-                if let Some(element) = document.select(&selector).next() {
-                    if let Some(href) = element.value().attr("href") {
+            if let Ok(selector) = Selector::parse(selector_str)
+                && let Some(element) = document.select(&selector).next()
+                    && let Some(href) = element.value().attr("href") {
                         // Convert relative URLs to absolute
                         return Some(self.resolve_favicon_url(base_url, href));
                     }
-                }
-            }
         }
 
         None
@@ -123,15 +121,12 @@ impl FaviconProviderImpl {
     }
 
     async fn try_download_favicon(&self, url: &str) -> Option<Bytes> {
-        if let Ok(response) = reqwest::get(url).await {
-            if response.status().is_success() {
-                if let Ok(bytes) = response.bytes().await {
-                    if !bytes.is_empty() {
+        if let Ok(response) = reqwest::get(url).await
+            && response.status().is_success()
+                && let Ok(bytes) = response.bytes().await
+                    && !bytes.is_empty() {
                         return Some(bytes);
                     }
-                }
-            }
-        }
         None
     }
 

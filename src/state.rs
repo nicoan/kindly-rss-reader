@@ -11,8 +11,8 @@ use crate::{
     repositories::{
         feed_content::FeedContentFsRepositoryImpl,
         persisted_config::{
-            persisted_config_repository_impl::PersistedConfigFsRepositoryImpl,
             PersistedConfigRepository,
+            persisted_config_repository_impl::PersistedConfigFsRepositoryImpl,
         },
     },
     router::{ARTICLES_DIR, FAVICONS_DIR},

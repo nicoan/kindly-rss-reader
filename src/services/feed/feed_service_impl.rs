@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2025-2026 Nicolás Antinori <nico.antinori.7@gmail.com>
 // SPDX-License-Identifier: AGPL-3.0-only
-use super::error::FeedServiceError;
 use super::FeedService;
 use super::Result;
+use super::error::FeedServiceError;
 use crate::config::Config;
 use crate::models::article::Article;
 use crate::models::parsed_feed::ParsedFeed;

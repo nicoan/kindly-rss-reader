@@ -5,7 +5,7 @@ pub mod feed;
 pub mod not_found;
 
 use axum::response::{Html, IntoResponse};
-use reqwest::{header, StatusCode};
+use reqwest::{StatusCode, header};
 
 pub(crate) struct ApiError {
     pub original_error: Box<dyn std::error::Error + 'static>,

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 use crate::{
     models::article::Article,
-    repositories::{feed::Feed, RepositoryError},
+    repositories::{RepositoryError, feed::Feed},
     transaction,
 };
 use axum::async_trait;

@@ -3,7 +3,7 @@
 //! TODO: Implement a proper parser!!!
 use crate::providers::image_processor::ImageProcessor;
 
-use super::{error::HtmlProcessorError, Result};
+use super::{Result, error::HtmlProcessorError};
 use axum::async_trait;
 use regex::Regex;
 use scraper::{Html, Selector};
@@ -161,11 +161,10 @@ impl HtmlProcessor for HtmlProcessorImpl {
 
     // Function to extract favicon URL from the HTML
     fn get_favicon_url(&self, html: &str) -> Option<String> {
-        if let Some(captures) = self.favicon_url.captures(html) {
-            if let Some(href) = captures.get(1) {
+        if let Some(captures) = self.favicon_url.captures(html)
+            && let Some(href) = captures.get(1) {
                 return Some(href.as_str().to_string());
             }
-        }
 
         None
     }

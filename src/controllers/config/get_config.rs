@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2025-2026 Nicolás Antinori <nico.antinori.7@gmail.com>
 // SPDX-License-Identifier: AGPL-3.0-only
 use crate::controllers::{ApiError, HtmlResponse};
-use crate::services::templates::{TemplateService, TEMPLATE_NAME_CONFIG};
+use crate::services::templates::{TEMPLATE_NAME_CONFIG, TemplateService};
 use crate::state::AppState;
 use axum::extract::State;
 use minijinja::context;

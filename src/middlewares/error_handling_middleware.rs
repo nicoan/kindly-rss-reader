@@ -18,7 +18,7 @@ use tower::{Layer, Service};
 
 use crate::{
     controllers::HtmlResponse,
-    services::templates::{TemplateService, TEMPLATE_NAME_ERROR},
+    services::templates::{TEMPLATE_NAME_ERROR, TemplateService},
     state::AppState,
     view_models::error::Error,
 };
