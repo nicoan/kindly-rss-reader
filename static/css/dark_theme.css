@@ -51,3 +51,6 @@ a {
     color: #FFF;
 }
 
+#default_favicon {
+  filter: invert(100%);
+}

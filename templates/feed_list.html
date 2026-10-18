@@ -38,7 +38,7 @@
                                 {% if feed.favicon_url %}
                                     <img src="{{ feed.favicon_url }}" class="favicon" />
                                 {% else %}
-                                    <img src="/static/images/default_favicon.png" class="favicon" />
+                                    <img id="default_favicon" src="/static/images/default_favicon.png" class="favicon" />
                                 {% endif %}
                                 <h3>{{ feed.title }}</h3>
                                 {% if feed.unread_count > 0 %}

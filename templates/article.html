@@ -15,7 +15,7 @@
                     {% if context.feed.favicon_url %}
                         <img src="{{ context.feed.favicon_url }}" class="favicon" />
                     {% else %}
-                        <img src="/static/images/default_favicon.png" class="favicon" />
+                        <img id="default_favicon" src="/static/images/default_favicon.png" class="favicon" />
                     {% endif %}
                     <h1> {{ context.feed.title }} </h1>
                 </div>
