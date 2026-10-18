@@ -78,10 +78,11 @@ impl FaviconProviderImpl {
         for selector_str in Self::FAVICON_SELECTORS {
             if let Ok(selector) = Selector::parse(selector_str)
                 && let Some(element) = document.select(&selector).next()
-                    && let Some(href) = element.value().attr("href") {
-                        // Convert relative URLs to absolute
-                        return Some(self.resolve_favicon_url(base_url, href));
-                    }
+                && let Some(href) = element.value().attr("href")
+            {
+                // Convert relative URLs to absolute
+                return Some(self.resolve_favicon_url(base_url, href));
+            }
         }
 
         None
@@ -123,10 +124,11 @@ impl FaviconProviderImpl {
     async fn try_download_favicon(&self, url: &str) -> Option<Bytes> {
         if let Ok(response) = reqwest::get(url).await
             && response.status().is_success()
-                && let Ok(bytes) = response.bytes().await
-                    && !bytes.is_empty() {
-                        return Some(bytes);
-                    }
+            && let Ok(bytes) = response.bytes().await
+            && !bytes.is_empty()
+        {
+            return Some(bytes);
+        }
         None
     }
 

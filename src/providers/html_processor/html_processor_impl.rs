@@ -171,9 +171,10 @@ impl HtmlProcessor for HtmlProcessorImpl {
     // Function to extract favicon URL from the HTML
     fn get_favicon_url(&self, html: &str) -> Option<String> {
         if let Some(captures) = self.favicon_url.captures(html)
-            && let Some(href) = captures.get(1) {
-                return Some(href.as_str().to_string());
-            }
+            && let Some(href) = captures.get(1)
+        {
+            return Some(href.as_str().to_string());
+        }
 
         None
     }
