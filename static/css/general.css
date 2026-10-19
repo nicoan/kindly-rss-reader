@@ -17,7 +17,7 @@ body {
     color: #555 !important;
 }
 
-main {
+.main {
     display: flex;
     height: 100vh;
     overflow: hidden;
